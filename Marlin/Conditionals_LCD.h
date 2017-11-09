@@ -34,13 +34,17 @@
 
     #define DOGLCD
     #define ULTIPANEL
+    #define NEWPANEL
     #define DEFAULT_LCD_CONTRAST 90
     #define LCD_CONTRAST_MIN 60
     #define LCD_CONTRAST_MAX 140
 
-  #elif ENABLED(MAKRPANEL)
+  #elif ENABLED(MAKRPANEL) || ENABLED(MINIPANEL)
 
-    #define U8GLIB_ST7565_64128N
+    #define DOGLCD
+    #define ULTIPANEL
+    #define NEWPANEL
+    #define DEFAULT_LCD_CONTRAST 17
 
   #elif ENABLED(ANET_KEYPAD_LCD)
 
@@ -49,11 +53,8 @@
     #define ADC_KEYPAD
     #define ADC_KEY_NUM 8
     #define ULTIPANEL
-
     // this helps to implement ADC_KEYPAD menus
-    #define ENCODER_PULSES_PER_STEP 1
     #define ENCODER_STEPS_PER_MENU_ITEM 1
-    #define ENCODER_FEEDRATE_DEADZONE 2
     #define REVERSE_MENU_DIRECTION
 
   #elif ENABLED(ANET_FULL_GRAPHICS_LCD)
@@ -63,6 +64,7 @@
   #elif ENABLED(BQ_LCD_SMART_CONTROLLER)
 
     #define REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
+    #define LONG_FILENAME_HOST_SUPPORT
 
   #elif ENABLED(miniVIKI) || ENABLED(VIKI2) || ENABLED(ELB_FULL_GRAPHIC_CONTROLLER)
 
@@ -71,18 +73,14 @@
     #define ULTIMAKERCONTROLLER //as available from the Ultimaker online store.
 
     #if ENABLED(miniVIKI)
-      #define LCD_CONTRAST_MIN      75
-      #define LCD_CONTRAST_MAX     115
-      #define DEFAULT_LCD_CONTRAST  95
-      #define U8GLIB_ST7565_64128N
+      #define LCD_CONTRAST_MIN  75
+      #define LCD_CONTRAST_MAX 115
+      #define DEFAULT_LCD_CONTRAST 95
     #elif ENABLED(VIKI2)
-      #define LCD_CONTRAST_MIN       0
-      #define LCD_CONTRAST_MAX     255
-      #define DEFAULT_LCD_CONTRAST 140
-      #define U8GLIB_ST7565_64128N
+      #define DEFAULT_LCD_CONTRAST 40
     #elif ENABLED(ELB_FULL_GRAPHIC_CONTROLLER)
-      #define LCD_CONTRAST_MIN      90
-      #define LCD_CONTRAST_MAX     130
+      #define LCD_CONTRAST_MIN  90
+      #define LCD_CONTRAST_MAX 130
       #define DEFAULT_LCD_CONTRAST 110
       #define U8GLIB_LM6059_AF
       #define SD_DETECT_INVERTED
@@ -92,6 +90,7 @@
 
     #define U8GLIB_SSD1306
     #define ULTIPANEL
+    #define NEWPANEL
     #define REVERSE_ENCODER_DIRECTION
     #define REVERSE_MENU_DIRECTION
 
@@ -100,41 +99,15 @@
     #define LCD_I2C_TYPE_PCA8574
     #define LCD_I2C_ADDRESS 0x27   // I2C Address of the port expander
     #define ULTIPANEL
+    #define NEWPANEL
 
   #elif ENABLED(REPRAPWORLD_GRAPHICAL_LCD)
 
     #define DOGLCD
     #define U8GLIB_ST7920
     #define ULTIPANEL
+    #define NEWPANEL
 
-  #elif ENABLED(CR10_STOCKDISPLAY)
-
-    #define REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
-    #ifndef ST7920_DELAY_1
-      #define ST7920_DELAY_1 DELAY_2_NOP
-    #endif
-    #ifndef ST7920_DELAY_2
-      #define ST7920_DELAY_2 DELAY_2_NOP
-    #endif
-    #ifndef ST7920_DELAY_3
-      #define ST7920_DELAY_3 DELAY_2_NOP
-    #endif
-
-  #elif ENABLED(MKS_12864OLED)
-
-    #define REPRAP_DISCOUNT_SMART_CONTROLLER
-    #define U8GLIB_SH1106
-
-  #elif ENABLED(MKS_MINI_12864)
-
-    #define MINIPANEL
-
-  #endif
-
-  #if ENABLED(MAKRPANEL) || ENABLED(MINIPANEL)
-    #define DOGLCD
-    #define ULTIPANEL
-    #define DEFAULT_LCD_CONTRAST 17
   #endif
 
   // Generic support for SSD1306 / SH1106 OLED based LCDs.
@@ -144,18 +117,10 @@
   #endif
 
   #if ENABLED(PANEL_ONE) || ENABLED(U8GLIB_SH1106)
-
     #define ULTIMAKERCONTROLLER
-
-  #elif ENABLED(MAKEBOARD_MINI_2_LINE_DISPLAY_1602)
-
-    #define REPRAP_DISCOUNT_SMART_CONTROLLER
-    #define LCD_WIDTH 16
-    #define LCD_HEIGHT 2
-
   #endif
 
-  #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER) || ENABLED(LCD_FOR_MELZI) || ENABLED(SILVER_GATE_GLCD_CONTROLLER)
+  #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER) || ENABLED(LCD_FOR_MELZI)
     #define DOGLCD
     #define U8GLIB_ST7920
     #define REPRAP_DISCOUNT_SMART_CONTROLLER
@@ -166,6 +131,7 @@
    || ENABLED(G3D_PANEL)                        \
    || ENABLED(RIGIDBOT_PANEL)
     #define ULTIPANEL
+    #define NEWPANEL
   #endif
 
   #if ENABLED(REPRAPWORLD_KEYPAD)
@@ -187,6 +153,7 @@
     #define LCD_I2C_TYPE_PCF8575
     #define LCD_I2C_ADDRESS 0x27   // I2C Address of the port expander
     #define ULTIPANEL
+    #define NEWPANEL
 
   #elif ENABLED(LCD_I2C_PANELOLU2)
 
@@ -196,6 +163,7 @@
     #define LCD_I2C_ADDRESS 0x20 // I2C Address of the port expander
     #define LCD_USE_I2C_BUZZER //comment out to disable buzzer on LCD
     #define ULTIPANEL
+    #define NEWPANEL
 
   #elif ENABLED(LCD_I2C_VIKI)
 
@@ -211,41 +179,27 @@
     #define LCD_I2C_ADDRESS 0x20 // I2C Address of the port expander
     #define LCD_USE_I2C_BUZZER //comment out to disable buzzer on LCD (requires LiquidTWI2 v1.2.3 or later)
     #define ULTIPANEL
+    #define NEWPANEL
 
     #define ENCODER_FEEDRATE_DEADZONE 4
 
-    #define STD_ENCODER_PULSES_PER_STEP 1
-    #define STD_ENCODER_STEPS_PER_MENU_ITEM 2
-
-  #elif ENABLED(G3D_PANEL)
-
-    #define STD_ENCODER_PULSES_PER_STEP 2
-    #define STD_ENCODER_STEPS_PER_MENU_ITEM 1
-
-  #elif ENABLED(miniVIKI) || ENABLED(VIKI2) \
-     || ENABLED(ELB_FULL_GRAPHIC_CONTROLLER) \
-     || ENABLED(OLED_PANEL_TINYBOY2) \
-     || ENABLED(BQ_LCD_SMART_CONTROLLER) \
-     || ENABLED(LCD_I2C_PANELOLU2) \
-     || ENABLED(REPRAP_DISCOUNT_SMART_CONTROLLER)
-    #define STD_ENCODER_PULSES_PER_STEP 4
-    #define STD_ENCODER_STEPS_PER_MENU_ITEM 1
+    #ifndef ENCODER_PULSES_PER_STEP
+      #define ENCODER_PULSES_PER_STEP 1
+    #endif
+    #ifndef ENCODER_STEPS_PER_MENU_ITEM
+      #define ENCODER_STEPS_PER_MENU_ITEM 2
+    #endif
   #endif
 
-  #ifndef STD_ENCODER_PULSES_PER_STEP
-    #define STD_ENCODER_PULSES_PER_STEP 5
-  #endif
-  #ifndef STD_ENCODER_STEPS_PER_MENU_ITEM
-    #define STD_ENCODER_STEPS_PER_MENU_ITEM 1
-  #endif
-  #ifndef ENCODER_PULSES_PER_STEP
-    #define ENCODER_PULSES_PER_STEP STD_ENCODER_PULSES_PER_STEP
-  #endif
-  #ifndef ENCODER_STEPS_PER_MENU_ITEM
-    #define ENCODER_STEPS_PER_MENU_ITEM STD_ENCODER_STEPS_PER_MENU_ITEM
-  #endif
-  #ifndef ENCODER_FEEDRATE_DEADZONE
-    #define ENCODER_FEEDRATE_DEADZONE 6
+  // Set encoder detents for well-known controllers
+  #if ENABLED(miniVIKI) || ENABLED(VIKI2) || ENABLED(ELB_FULL_GRAPHIC_CONTROLLER) || ENABLED(OLED_PANEL_TINYBOY2) \
+   || ENABLED(BQ_LCD_SMART_CONTROLLER) || ENABLED(LCD_I2C_PANELOLU2) || ENABLED(REPRAP_DISCOUNT_SMART_CONTROLLER)
+    #ifndef ENCODER_PULSES_PER_STEP
+      #define ENCODER_PULSES_PER_STEP 4
+    #endif
+    #ifndef ENCODER_STEPS_PER_MENU_ITEM
+      #define ENCODER_STEPS_PER_MENU_ITEM 1
+    #endif
   #endif
 
   // Shift register panels
@@ -256,6 +210,7 @@
   #if ENABLED(SAV_3DLCD)
     #define SR_LCD_2W_NL    // Non latching 2 wire shift register
     #define ULTIPANEL
+    #define NEWPANEL
   #endif
 
   #if ENABLED(DOGLCD) // Change number of lines to match the DOG graphic display
@@ -268,7 +223,7 @@
   #endif
 
   #if ENABLED(ULTIPANEL)
-    #define NEWPANEL  // Disable this if you actually have no click-encoder panel
+    #define NEWPANEL  //enable this if you have a click-encoder panel
     #define ULTRA_LCD
     #ifndef LCD_WIDTH
       #define LCD_WIDTH 20
@@ -276,12 +231,14 @@
     #ifndef LCD_HEIGHT
       #define LCD_HEIGHT 4
     #endif
-  #elif ENABLED(ULTRA_LCD)  // no panel but just LCD
-    #ifndef LCD_WIDTH
-      #define LCD_WIDTH 16
-    #endif
-    #ifndef LCD_HEIGHT
-      #define LCD_HEIGHT 2
+  #else // no panel but just LCD
+    #if ENABLED(ULTRA_LCD)
+      #ifndef LCD_WIDTH
+        #define LCD_WIDTH 16
+      #endif
+      #ifndef LCD_HEIGHT
+        #define LCD_HEIGHT 2
+      #endif
     #endif
   #endif
 
@@ -454,6 +411,13 @@
   #define HAS_Z_SERVO_ENDSTOP (defined(Z_ENDSTOP_SERVO_NR) && Z_ENDSTOP_SERVO_NR >= 0)
 
   /**
+   * UBL has its own manual probing, so this just causes trouble.
+   */
+  #if ENABLED(AUTO_BED_LEVELING_UBL)
+    #undef PROBE_MANUALLY
+  #endif
+
+  /**
    * Set a flag for any enabled probe
    */
   #define PROBE_SELECTED (ENABLED(PROBE_MANUALLY) || ENABLED(FIX_MOUNTED_PROBE) || ENABLED(Z_PROBE_ALLEN_KEY) || HAS_Z_SERVO_ENDSTOP || ENABLED(Z_PROBE_SLED) || ENABLED(SOLENOID_PROBE))
@@ -468,6 +432,6 @@
 
   #define HAS_SOFTWARE_ENDSTOPS (ENABLED(MIN_SOFTWARE_ENDSTOPS) || ENABLED(MAX_SOFTWARE_ENDSTOPS))
   #define HAS_RESUME_CONTINUE (ENABLED(NEWPANEL) || ENABLED(EMERGENCY_PARSER))
-  #define HAS_COLOR_LEDS (ENABLED(BLINKM) || ENABLED(RGB_LED) || ENABLED(RGBW_LED) || ENABLED(PCA9632) || ENABLED(NEOPIXEL_LED))
+  #define HAS_COLOR_LEDS (ENABLED(BLINKM) || ENABLED(RGB_LED) || ENABLED(RGBW_LED) || ENABLED(PCA9632) || ENABLED(NEOPIXEL_RGBW_LED))
 
 #endif // CONDITIONALS_LCD_H

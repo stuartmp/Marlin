@@ -24,17 +24,11 @@
  * English
  *
  * LCD Menu Messages
- * See also http://marlinfw.org/docs/development/lcd_language.html
+ * See also https://github.com/MarlinFirmware/Marlin/wiki/LCD-Language
  *
  */
 #ifndef LANGUAGE_EN_H
 #define LANGUAGE_EN_H
-
-#define en 1234
-#if LCD_LANGUAGE == en
-  #define NOT_EXTENDED_ISO10646_1_5X7
-#endif
-#undef en
 
 #ifndef WELCOME_MSG
   #define WELCOME_MSG                         MACHINE_NAME _UxGT(" ready.")
@@ -137,6 +131,24 @@
 #endif
 #ifndef MSG_PREHEAT_2_SETTINGS
   #define MSG_PREHEAT_2_SETTINGS              MSG_PREHEAT_2 _UxGT(" conf")
+#endif
+#ifndef MSG_PREHEAT_3
+  #define MSG_PREHEAT_3                       _UxGT("Preheat PETG")
+#endif
+#ifndef MSG_PREHEAT_3_N
+  #define MSG_PREHEAT_3_N                     MSG_PREHEAT_3 _UxGT(" ")
+#endif
+#ifndef MSG_PREHEAT_3_ALL
+  #define MSG_PREHEAT_3_ALL                   MSG_PREHEAT_3 _UxGT(" All")
+#endif
+#ifndef MSG_PREHEAT_3_END
+  #define MSG_PREHEAT_3_END                   MSG_PREHEAT_3 _UxGT(" End")
+#endif
+#ifndef MSG_PREHEAT_3_BEDONLY
+  #define MSG_PREHEAT_3_BEDONLY               MSG_PREHEAT_3 _UxGT(" Bed")
+#endif
+#ifndef MSG_PREHEAT_3_SETTINGS
+  #define MSG_PREHEAT_3_SETTINGS              MSG_PREHEAT_3 _UxGT(" conf")
 #endif
 #ifndef MSG_COOLDOWN
   #define MSG_COOLDOWN                        _UxGT("Cooldown")
@@ -380,6 +392,12 @@
 #ifndef MSG_MOVE_E
   #define MSG_MOVE_E                          _UxGT("Extruder")
 #endif
+#ifndef MSG_MOVE_0001MM
+  #define MSG_MOVE_0001MM                       _UxGT("Move 0.001mm")
+#endif
+#ifndef MSG_MOVE_001MM
+  #define MSG_MOVE_001MM                       _UxGT("Move 0.01mm")
+#endif
 #ifndef MSG_MOVE_01MM
   #define MSG_MOVE_01MM                       _UxGT("Move 0.1mm")
 #endif
@@ -403,9 +421,6 @@
 #endif
 #ifndef MSG_FAN_SPEED
   #define MSG_FAN_SPEED                       _UxGT("Fan speed")
-#endif
-#ifndef MSG_EXTRA_FAN_SPEED
-  #define MSG_EXTRA_FAN_SPEED                 _UxGT("Extra fan speed")
 #endif
 #ifndef MSG_FLOW
   #define MSG_FLOW                            _UxGT("Flow")
@@ -621,10 +636,7 @@
   #define MSG_CONTROL_RETRACT_RECOVER_SWAP    _UxGT("S UnRet mm")
 #endif
 #ifndef MSG_CONTROL_RETRACT_RECOVERF
-  #define MSG_CONTROL_RETRACT_RECOVERF        _UxGT("UnRet V")
-#endif
-#ifndef MSG_CONTROL_RETRACT_RECOVER_SWAPF
-  #define MSG_CONTROL_RETRACT_RECOVER_SWAPF   _UxGT("S UnRet V")
+  #define MSG_CONTROL_RETRACT_RECOVERF        _UxGT("UnRet  V")
 #endif
 #ifndef MSG_AUTORETRACT
   #define MSG_AUTORETRACT                     _UxGT("AutoRetr.")

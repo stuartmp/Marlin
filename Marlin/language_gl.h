@@ -24,7 +24,7 @@
  * Galician language (ISO "gl")
  *
  * LCD Menu Messages
- * See also http://marlinfw.org/docs/development/lcd_language.html
+ * See also https://github.com/MarlinFirmware/Marlin/wiki/LCD-Language
  *
  */
 #ifndef LANGUAGE_GL_H
@@ -32,7 +32,6 @@
 
 #define MAPPER_C2C3
 #define DISPLAY_CHARSET_ISO10646_1
-#define NOT_EXTENDED_ISO10646_1_5X7
 
 #define WELCOME_MSG                         MACHINE_NAME _UxGT(" lista.")
 #define MSG_SD_INSERTED                     _UxGT("Tarxeta inserida")

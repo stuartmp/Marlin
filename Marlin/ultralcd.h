@@ -30,7 +30,7 @@
   #define BUTTON_EXISTS(BN) (defined(BTN_## BN) && BTN_## BN >= 0)
   #define BUTTON_PRESSED(BN) !READ(BTN_## BN)
 
-  extern int16_t lcd_preheat_hotend_temp[2], lcd_preheat_bed_temp[2], lcd_preheat_fan_speed[2];
+  extern int16_t lcd_preheat_hotend_temp[3], lcd_preheat_bed_temp[3], lcd_preheat_fan_speed[3]; //was [2]
 
   int16_t lcd_strlen(const char* s);
   int16_t lcd_strlen_P(const char* s);
@@ -168,10 +168,6 @@
     #define LCD_CLICKED false
   #endif
 
-  #if ENABLED(LCD_SET_PROGRESS_MANUALLY) && (ENABLED(LCD_PROGRESS_BAR) || ENABLED(DOGLCD))
-    extern uint8_t progress_bar_percent;
-  #endif
-
 #else // no LCD
 
   inline void lcd_update() {}
@@ -201,12 +197,8 @@ void lcd_reset_status();
   float lcd_z_offset_edit();
 #endif
 
-#if ENABLED(DELTA_AUTO_CALIBRATION) && !HAS_BED_PROBE
-  float lcd_probe_pt(const float &rx, const float &ry);
-#endif
-
-#if ENABLED(SD_REPRINT_LAST_SELECTED_FILE)
-  void lcd_reselect_last_file();
+#if ENABLED(DELTA_CALIBRATION_MENU)
+  float lcd_probe_pt(const float &lx, const float &ly);
 #endif
 
 #endif // ULTRALCD_H
