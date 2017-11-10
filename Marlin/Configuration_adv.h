@@ -855,12 +855,12 @@
 #define ADVANCED_PAUSE_FEATURE
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   #define PAUSE_PARK_X_POS 3                  // X position of hotend
-  #define PAUSE_PARK_Y_POS 297	              // Y position of hotend
-  #define PAUSE_PARK_Z_ADD   5                // Z addition of hotend (lift)
+  #define PAUSE_PARK_Y_POS 3	              // Y position of hotend
+  #define PAUSE_PARK_Z_ADD  20                // Z addition of hotend (lift)
   #define PAUSE_PARK_XY_FEEDRATE 100          // X and Y axes feedrate in mm/s (also used for delta printers Z axis)
   #define PAUSE_PARK_Z_FEEDRATE 5             // Z axis feedrate in mm/s (not used for delta printers)
   #define PAUSE_PARK_RETRACT_FEEDRATE 60      // Initial retract feedrate in mm/s
-  #define PAUSE_PARK_RETRACT_LENGTH 4         // Initial retract in mm
+  #define PAUSE_PARK_RETRACT_LENGTH 2         // Initial retract in mm
                                               // It is a short retract used immediately after print interrupt before move to filament exchange position
   #define FILAMENT_CHANGE_UNLOAD_FEEDRATE 10  // Unload filament feedrate in mm/s - filament unloading can be fast
   #define FILAMENT_CHANGE_UNLOAD_LENGTH 420   // Unload filament length from hotend in mm
@@ -872,7 +872,7 @@
                                               // Longer length for bowden printers to fast load filament into whole bowden tube over the hotend,
                                               // Short or zero length for printers without bowden where loading is not used
   #define ADVANCED_PAUSE_EXTRUDE_FEEDRATE 3   // Extrude filament feedrate in mm/s - must be slower than load feedrate
-  #define ADVANCED_PAUSE_EXTRUDE_LENGTH 50    // Extrude filament length in mm after filament is loaded over the hotend,
+  #define ADVANCED_PAUSE_EXTRUDE_LENGTH 20    // Extrude filament length in mm after filament is loaded over the hotend,
                                               // 0 to disable for manual extrusion
                                               // Filament can be extruded repeatedly from the filament exchange menu to fill the hotend,
                                               // or until outcoming filament color is not clear for filament color change
@@ -1324,14 +1324,14 @@
 /**
  * User-defined menu items that execute custom GCode
  */
-//#define CUSTOM_USER_MENUS
+#define CUSTOM_USER_MENUS
 #if ENABLED(CUSTOM_USER_MENUS)
   #define USER_SCRIPT_DONE "M117 User Script Done"
   #define USER_SCRIPT_AUDIBLE_FEEDBACK
   //#define USER_SCRIPT_RETURN  // Return to status screen after a script
 
-  #define USER_DESC_1 "Home & UBL Info"
-  #define USER_GCODE_1 "G28\nG29 W"
+  #define USER_DESC_1 "Messaage"
+  #define USER_GCODE_1 "M117 "Hello"
 
   #define USER_DESC_2 "Preheat for PLA"
   #define USER_GCODE_2 "M140 S" STRINGIFY(PREHEAT_1_TEMP_BED) "\nM104 S" STRINGIFY(PREHEAT_1_TEMP_HOTEND)
