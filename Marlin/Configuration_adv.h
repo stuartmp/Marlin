@@ -573,7 +573,7 @@
    * On print completion the LCD Menu will open with the file selected.
    * You can just click to start the print, or navigate elsewhere.
    */
-  //#define SD_REPRINT_LAST_SELECTED_FILE
+ #define SD_REPRINT_LAST_SELECTED_FILE
 
 #endif // SDSUPPORT
 
