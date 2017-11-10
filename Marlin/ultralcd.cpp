@@ -2701,7 +2701,7 @@ void lcd_preheat_m3_menu() { //PETG
       // Set Home Offsets
       //
       MENU_ITEM(function, MSG_SET_HOME_OFFSETS, lcd_set_home_offsets);
-      //MENU_ITEM(gcode, MSG_SET_ORIGIN, PSTR("G92 X0 Y0 Z0"));
+      MENU_ITEM(gcode, MSG_SET_ORIGIN, PSTR("G92 X0 Y0 Z0"));
     #endif
 
     //
