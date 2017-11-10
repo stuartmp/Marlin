@@ -58,7 +58,7 @@
 #endif
 
 // Initialized by settings.load()
-int16_t lcd_preheat_hotend_temp[2], lcd_preheat_bed_temp[2], lcd_preheat_fan_speed[2];
+int16_t lcd_preheat_hotend_temp[3], lcd_preheat_bed_temp[3], lcd_preheat_fan_speed[3];
 
 #if ENABLED(LCD_SET_PROGRESS_MANUALLY) && (ENABLED(LCD_PROGRESS_BAR) || ENABLED(DOGLCD))
   uint8_t progress_bar_percent;
@@ -169,6 +169,7 @@ uint16_t max_display_update_time = 0;
   void lcd_control_temperature_menu();
   void lcd_control_temperature_preheat_material1_settings_menu();
   void lcd_control_temperature_preheat_material2_settings_menu();
+  void lcd_control_temperature_preheat_material3_settings_menu();
   void lcd_control_motion_menu();
   void lcd_control_filament_menu();
 
@@ -1446,25 +1447,31 @@ void kill_screen(const char* lcd_msg) {
   #if TEMP_SENSOR_0 != 0
     void lcd_preheat_m1_e0_only() { _lcd_preheat(0, lcd_preheat_hotend_temp[0], -1, lcd_preheat_fan_speed[0]); }
     void lcd_preheat_m2_e0_only() { _lcd_preheat(0, lcd_preheat_hotend_temp[1], -1, lcd_preheat_fan_speed[1]); }
+    void lcd_preheat_m3_e0_only() { _lcd_preheat(0, lcd_preheat_hotend_temp[2], -1, lcd_preheat_fan_speed[2]); }
     #if TEMP_SENSOR_BED != 0
       void lcd_preheat_m1_e0() { _lcd_preheat(0, lcd_preheat_hotend_temp[0], lcd_preheat_bed_temp[0], lcd_preheat_fan_speed[0]); }
       void lcd_preheat_m2_e0() { _lcd_preheat(0, lcd_preheat_hotend_temp[1], lcd_preheat_bed_temp[1], lcd_preheat_fan_speed[1]); }
+      void lcd_preheat_m3_e0() { _lcd_preheat(0, lcd_preheat_hotend_temp[2], lcd_preheat_bed_temp[2], lcd_preheat_fan_speed[2]); }
     #endif
   #endif
 
   #if HOTENDS > 1
     void lcd_preheat_m1_e1_only() { _lcd_preheat(1, lcd_preheat_hotend_temp[0], -1, lcd_preheat_fan_speed[0]); }
     void lcd_preheat_m2_e1_only() { _lcd_preheat(1, lcd_preheat_hotend_temp[1], -1, lcd_preheat_fan_speed[1]); }
+    void lcd_preheat_m3_e1_only() { _lcd_preheat(1, lcd_preheat_hotend_temp[2], -1, lcd_preheat_fan_speed[2]); }
     #if TEMP_SENSOR_BED != 0
       void lcd_preheat_m1_e1() { _lcd_preheat(1, lcd_preheat_hotend_temp[0], lcd_preheat_bed_temp[0], lcd_preheat_fan_speed[0]); }
       void lcd_preheat_m2_e1() { _lcd_preheat(1, lcd_preheat_hotend_temp[1], lcd_preheat_bed_temp[1], lcd_preheat_fan_speed[1]); }
+      void lcd_preheat_m3_e1() { _lcd_preheat(1, lcd_preheat_hotend_temp[2], lcd_preheat_bed_temp[2], lcd_preheat_fan_speed[2]); }
     #endif
     #if HOTENDS > 2
       void lcd_preheat_m1_e2_only() { _lcd_preheat(2, lcd_preheat_hotend_temp[0], -1, lcd_preheat_fan_speed[0]); }
       void lcd_preheat_m2_e2_only() { _lcd_preheat(2, lcd_preheat_hotend_temp[1], -1, lcd_preheat_fan_speed[1]); }
+      void lcd_preheat_m3_e2_only() { _lcd_preheat(2, lcd_preheat_hotend_temp[2], -1, lcd_preheat_fan_speed[2]); }
       #if TEMP_SENSOR_BED != 0
         void lcd_preheat_m1_e2() { _lcd_preheat(2, lcd_preheat_hotend_temp[0], lcd_preheat_bed_temp[0], lcd_preheat_fan_speed[0]); }
         void lcd_preheat_m2_e2() { _lcd_preheat(2, lcd_preheat_hotend_temp[1], lcd_preheat_bed_temp[1], lcd_preheat_fan_speed[1]); }
+        void lcd_preheat_m3_e2() { _lcd_preheat(2, lcd_preheat_hotend_temp[2], lcd_preheat_bed_temp[2], lcd_preheat_fan_speed[2]); }
       #endif
       #if HOTENDS > 3
         void lcd_preheat_m1_e3_only() { _lcd_preheat(3, lcd_preheat_hotend_temp[0], -1, lcd_preheat_fan_speed[0]); }
@@ -1472,13 +1479,16 @@ void kill_screen(const char* lcd_msg) {
         #if TEMP_SENSOR_BED != 0
           void lcd_preheat_m1_e3() { _lcd_preheat(3, lcd_preheat_hotend_temp[0], lcd_preheat_bed_temp[0], lcd_preheat_fan_speed[0]); }
           void lcd_preheat_m2_e3() { _lcd_preheat(3, lcd_preheat_hotend_temp[1], lcd_preheat_bed_temp[1], lcd_preheat_fan_speed[1]); }
+          void lcd_preheat_m3_e3() { _lcd_preheat(3, lcd_preheat_hotend_temp[2], lcd_preheat_bed_temp[2], lcd_preheat_fan_speed[2]); }
         #endif
         #if HOTENDS > 4
           void lcd_preheat_m1_e4_only() { _lcd_preheat(4, lcd_preheat_hotend_temp[0], -1, lcd_preheat_fan_speed[0]); }
           void lcd_preheat_m2_e4_only() { _lcd_preheat(4, lcd_preheat_hotend_temp[1], -1, lcd_preheat_fan_speed[1]); }
+          void lcd_preheat_m3_e4_only() { _lcd_preheat(4, lcd_preheat_hotend_temp[2], -1, lcd_preheat_fan_speed[2]); }
           #if TEMP_SENSOR_BED != 0
             void lcd_preheat_m1_e4() { _lcd_preheat(4, lcd_preheat_hotend_temp[0], lcd_preheat_bed_temp[0], lcd_preheat_fan_speed[0]); }
             void lcd_preheat_m2_e4() { _lcd_preheat(4, lcd_preheat_hotend_temp[1], lcd_preheat_bed_temp[1], lcd_preheat_fan_speed[1]); }
+            void lcd_preheat_m3_e4() { _lcd_preheat(4, lcd_preheat_hotend_temp[2], lcd_preheat_bed_temp[2], lcd_preheat_fan_speed[2]); }
           #endif
         #endif // HOTENDS > 4
       #endif // HOTENDS > 3
@@ -1522,12 +1532,32 @@ void kill_screen(const char* lcd_msg) {
         lcd_preheat_m2_e0_only();
       #endif
     }
+	void lcd_preheat_m3_all() {
+      #if HOTENDS > 1
+        thermalManager.setTargetHotend(lcd_preheat_hotend_temp[2], 1);
+        #if HOTENDS > 2
+          thermalManager.setTargetHotend(lcd_preheat_hotend_temp[2], 2);
+          #if HOTENDS > 3
+            thermalManager.setTargetHotend(lcd_preheat_hotend_temp[2], 3);
+            #if HOTENDS > 4
+              thermalManager.setTargetHotend(lcd_preheat_hotend_temp[2], 4);
+            #endif // HOTENDS > 4
+          #endif // HOTENDS > 3
+        #endif // HOTENDS > 2
+      #endif // HOTENDS > 1
+      #if TEMP_SENSOR_BED != 0
+        lcd_preheat_m3_e0();
+      #else
+        lcd_preheat_m3_e0_only();
+      #endif
+    }
 
   #endif // HOTENDS > 1
 
   #if TEMP_SENSOR_BED != 0
     void lcd_preheat_m1_bedonly() { _lcd_preheat(0, 0, lcd_preheat_bed_temp[0], lcd_preheat_fan_speed[0]); }
     void lcd_preheat_m2_bedonly() { _lcd_preheat(0, 0, lcd_preheat_bed_temp[1], lcd_preheat_fan_speed[1]); }
+    void lcd_preheat_m3_bedonly() { _lcd_preheat(0, 0, lcd_preheat_bed_temp[2], lcd_preheat_fan_speed[2]); }
   #endif
 
   #if TEMP_SENSOR_0 != 0 && (TEMP_SENSOR_1 != 0 || TEMP_SENSOR_2 != 0 || TEMP_SENSOR_3 != 0 || TEMP_SENSOR_4 != 0 || TEMP_SENSOR_BED != 0)
@@ -1636,6 +1666,58 @@ void kill_screen(const char* lcd_msg) {
       END_MENU();
     }
 
+void lcd_preheat_m3_menu() { //PETG
+      START_MENU();
+      MENU_BACK(MSG_PREPARE);
+      #if HOTENDS == 1
+        #if TEMP_SENSOR_BED != 0
+          MENU_ITEM(function, MSG_PREHEAT_3, lcd_preheat_m3_e0);
+          MENU_ITEM(function, MSG_PREHEAT_3_END, lcd_preheat_m3_e0_only);
+        #else
+          MENU_ITEM(function, MSG_PREHEAT_3, lcd_preheat_m3_e0_only);
+        #endif
+      #else
+        #if TEMP_SENSOR_BED != 0
+          MENU_ITEM(function, MSG_PREHEAT_3_N MSG_H1, lcd_preheat_m3_e0);
+          MENU_ITEM(function, MSG_PREHEAT_3_END " " MSG_E1, lcd_preheat_m3_e0_only);
+          MENU_ITEM(function, MSG_PREHEAT_3_N MSG_H2, lcd_preheat_m3_e1);
+          MENU_ITEM(function, MSG_PREHEAT_3_END " " MSG_E2, lcd_preheat_m3_e1_only);
+        #else
+          MENU_ITEM(function, MSG_PREHEAT_3_N MSG_H1, lcd_preheat_m3_e0_only);
+          MENU_ITEM(function, MSG_PREHEAT_3_N MSG_H2, lcd_preheat_m3_e1_only);
+        #endif
+        #if HOTENDS > 2
+          #if TEMP_SENSOR_BED != 0
+            MENU_ITEM(function, MSG_PREHEAT_3_N MSG_H3, lcd_preheat_m3_e2);
+            MENU_ITEM(function, MSG_PREHEAT_3_END " " MSG_E3, lcd_preheat_m3_e2_only);
+          #else
+            MENU_ITEM(function, MSG_PREHEAT_3_N MSG_H3, lcd_preheat_m3_e2_only);
+          #endif
+          #if HOTENDS > 3
+            #if TEMP_SENSOR_BED != 0
+              MENU_ITEM(function, MSG_PREHEAT_3_N MSG_H4, lcd_preheat_m3_e3);
+              MENU_ITEM(function, MSG_PREHEAT_3_END " " MSG_E4, lcd_preheat_m3_e3_only);
+            #else
+              MENU_ITEM(function, MSG_PREHEAT_3_N MSG_H4, lcd_preheat_m3_e3_only);
+            #endif
+            #if HOTENDS > 4
+              #if TEMP_SENSOR_BED != 0
+                MENU_ITEM(function, MSG_PREHEAT_3_N MSG_H5, lcd_preheat_m3_e4);
+                MENU_ITEM(function, MSG_PREHEAT_3_END " " MSG_E5, lcd_preheat_m3_e4_only);
+              #else
+                MENU_ITEM(function, MSG_PREHEAT_3_N MSG_H5, lcd_preheat_m3_e4_only);
+              #endif
+            #endif // HOTENDS > 4
+          #endif // HOTENDS > 3
+        #endif // HOTENDS > 2
+        MENU_ITEM(function, MSG_PREHEAT_3_ALL, lcd_preheat_m3_all);
+      #endif // HOTENDS > 1
+      #if TEMP_SENSOR_BED != 0
+        MENU_ITEM(function, MSG_PREHEAT_3_BEDONLY, lcd_preheat_m3_bedonly);
+      #endif
+      END_MENU();
+    }
+	
   #endif // TEMP_SENSOR_0 && (TEMP_SENSOR_1 || TEMP_SENSOR_2 || TEMP_SENSOR_3 || TEMP_SENSOR_4 || TEMP_SENSOR_BED)
 
   void lcd_cooldown() {
@@ -2141,9 +2223,11 @@ void kill_screen(const char* lcd_msg) {
       #if HAS_TEMP_BED
         MENU_ITEM(gcode, MSG_UBL_VALIDATE_PLA_MESH, PSTR("G28\nG26 C B" STRINGIFY(PREHEAT_1_TEMP_BED) " H" STRINGIFY(PREHEAT_1_TEMP_HOTEND) " P"));
         MENU_ITEM(gcode, MSG_UBL_VALIDATE_ABS_MESH, PSTR("G28\nG26 C B" STRINGIFY(PREHEAT_2_TEMP_BED) " H" STRINGIFY(PREHEAT_2_TEMP_HOTEND) " P"));
+        MENU_ITEM(gcode, MSG_UBL_VALIDATE_PETG_MESH, PSTR("G28\nG26 C B" STRINGIFY(PREHEAT_3_TEMP_BED) " H" STRINGIFY(PREHEAT_3_TEMP_HOTEND) " P"));
       #else
         MENU_ITEM(gcode, MSG_UBL_VALIDATE_PLA_MESH, PSTR("G28\nG26 C B0 H" STRINGIFY(PREHEAT_1_TEMP_HOTEND) " P"));
         MENU_ITEM(gcode, MSG_UBL_VALIDATE_ABS_MESH, PSTR("G28\nG26 C B0 H" STRINGIFY(PREHEAT_2_TEMP_HOTEND) " P"));
+        MENU_ITEM(gcode, MSG_UBL_VALIDATE_PETG_MESH, PSTR("G28\nG26 C B0 H" STRINGIFY(PREHEAT_3_TEMP_HOTEND) " P"));
       #endif
       MENU_ITEM(function, MSG_UBL_VALIDATE_CUSTOM_MESH, _lcd_ubl_validate_custom_mesh);
       MENU_ITEM(function, MSG_WATCH, lcd_return_to_status);
@@ -2268,6 +2352,14 @@ void kill_screen(const char* lcd_msg) {
           "M104 S0\n"
           "M140 S0"
         ));
+          MENU_ITEM(gcode, MSG_UBL_BUILD_PETG_MESH, PSTR(
+          "G28\n"
+          "M190 S" STRINGIFY(PREHEAT_3_TEMP_BED) "\n"
+          "M109 S" STRINGIFY(PREHEAT_3_TEMP_HOTEND) "\n"
+          "G29 P1\n"
+          "M104 S0\n"
+          "M140 S0"
+        ));
       #else
         MENU_ITEM(gcode, MSG_UBL_BUILD_PLA_MESH, PSTR(
           "G28\n"
@@ -2278,6 +2370,12 @@ void kill_screen(const char* lcd_msg) {
         MENU_ITEM(gcode, MSG_UBL_BUILD_ABS_MESH, PSTR(
           "G28\n"
           "M109 S" STRINGIFY(PREHEAT_2_TEMP_HOTEND) "\n"
+          "G29 P1\n"
+          "M104 S0"
+        ));
+          MENU_ITEM(gcode, MSG_UBL_BUILD_PETG_MESH, PSTR(
+          "G28\n"
+          "M109 S" STRINGIFY(PREHEAT_3_TEMP_HOTEND) "\n"
           "G29 P1\n"
           "M104 S0"
         ));
@@ -2637,9 +2735,11 @@ void kill_screen(const char* lcd_msg) {
       #if TEMP_SENSOR_1 != 0 || TEMP_SENSOR_2 != 0 || TEMP_SENSOR_3 != 0 || TEMP_SENSOR_4 != 0 || TEMP_SENSOR_BED != 0
         MENU_ITEM(submenu, MSG_PREHEAT_1, lcd_preheat_m1_menu);
         MENU_ITEM(submenu, MSG_PREHEAT_2, lcd_preheat_m2_menu);
+        MENU_ITEM(submenu, MSG_PREHEAT_3, lcd_preheat_m3_menu);
       #else
         MENU_ITEM(function, MSG_PREHEAT_1, lcd_preheat_m1_e0_only);
         MENU_ITEM(function, MSG_PREHEAT_2, lcd_preheat_m2_e0_only);
+        MENU_ITEM(function, MSG_PREHEAT_3, lcd_preheat_m3_e0_only);
       #endif
 
     #endif // TEMP_SENSOR_0 != 0
@@ -3031,6 +3131,7 @@ void kill_screen(const char* lcd_msg) {
   void lcd_move_menu_10mm() { _goto_manual_move(10.0); }
   void lcd_move_menu_1mm()  { _goto_manual_move( 1.0); }
   void lcd_move_menu_01mm() { _goto_manual_move( 0.1); }
+  void lcd_move_menu_001mm() { _goto_manual_move( 0.01); }
 
   void _lcd_move_distance_menu(const AxisEnum axis, const screenFunc_t func) {
     _manual_move_func_ptr = func;
@@ -3051,6 +3152,7 @@ void kill_screen(const char* lcd_msg) {
     MENU_ITEM(submenu, MSG_MOVE_10MM, lcd_move_menu_10mm);
     MENU_ITEM(submenu, MSG_MOVE_1MM, lcd_move_menu_1mm);
     MENU_ITEM(submenu, MSG_MOVE_01MM, lcd_move_menu_01mm);
+	MENU_ITEM(submenu, MSG_MOVE_001MM, lcd_move_menu_001mm);
     END_MENU();
   }
   void lcd_move_get_x_amount()        { _lcd_move_distance_menu(X_AXIS, lcd_move_x); }
@@ -3419,6 +3521,11 @@ void kill_screen(const char* lcd_msg) {
     // Preheat Material 2 conf
     //
     MENU_ITEM(submenu, MSG_PREHEAT_2_SETTINGS, lcd_control_temperature_preheat_material2_settings_menu);
+	//
+    // Preheat Material 3 conf
+    //
+    MENU_ITEM(submenu, MSG_PREHEAT_3_SETTINGS, lcd_control_temperature_preheat_material3_settings_menu);
+    
     END_MENU();
   }
 
@@ -3471,10 +3578,17 @@ void kill_screen(const char* lcd_msg) {
 
   /**
    *
+   * "Temperature" > "Preheat Material 3 conf" submenu
+   *
+   */
+  void lcd_control_temperature_preheat_material3_settings_menu() { _lcd_control_temperature_preheat_settings_menu(2); }
+
+
+  /**
+   *
    * "Control" > "Motion" submenu
    *
    */
-
   void _reset_acceleration_rates() { planner.reset_acceleration_rates(); }
   #if ENABLED(DISTINCT_E_FACTORS)
     void _reset_e_acceleration_rate(const uint8_t e) { if (e == active_extruder) _reset_acceleration_rates(); }
