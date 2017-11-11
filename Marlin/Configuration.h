@@ -125,7 +125,7 @@
 
 // Optional custom name for your RepStrap or other custom machine
 // Displayed in the LCD "Ready" message
-#define CUSTOM_MACHINE_NAME "CR-10"
+#define CUSTOM_MACHINE_NAME "CR-10 V1.1.6.1"
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
@@ -583,7 +583,7 @@
 
 
 
-#define DEFAULT_MAX_FEEDRATE          { 500, 500, 15, 25 }
+#define DEFAULT_MAX_FEEDRATE          { 500, 500, 15, 70 } 
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -593,7 +593,7 @@
  */
 
 
-#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 5000 }
+#define DEFAULT_MAX_ACCELERATION      { 1000, 600, 100, 5000 }
 
 /**
  * Default Acceleration (change/s) change = mm/s
@@ -607,8 +607,6 @@
 #define DEFAULT_RETRACT_ACCELERATION  500    // E acceleration for retracts
 #define DEFAULT_TRAVEL_ACCELERATION   1000    // X, Y, Z acceleration for travel (non printing) moves
 
-
-
 /**
  * Default Jerk (mm/s)
  * Override with M205 X Y Z E
@@ -618,12 +616,8 @@
  * value set here, it may happen instantaneously.
  */
 
-
-
-
-
 #define DEFAULT_XJERK                 15.0
-#define DEFAULT_YJERK                 15.0
+#define DEFAULT_YJERK                 10.0
 #define DEFAULT_ZJERK                  2.7
 #define DEFAULT_EJERK                  5.0
 
@@ -1106,8 +1100,6 @@
 
 //
 #define EEPROM_SETTINGS // Enable for M500 and M501 commands
-
-
 //#define DISABLE_M503    // Saves ~2700 bytes of PROGMEM. Disable for release!
 #define EEPROM_CHITCHAT   // Give feedback on EEPROM commands. Disable to save PROGMEM.
 
@@ -1140,8 +1132,8 @@
 // @section temperature
 
 // Preheat Constants
-#define PREHEAT_1_TEMP_HOTEND 207
-#define PREHEAT_1_TEMP_BED     65
+#define PREHEAT_1_TEMP_HOTEND 205
+#define PREHEAT_1_TEMP_BED     63
 #define PREHEAT_1_FAN_SPEED     0 // Value from 0 to 255
 
 #define PREHEAT_2_TEMP_HOTEND 245
