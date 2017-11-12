@@ -452,13 +452,10 @@ FORCE_INLINE float homing_feedrate(const AxisEnum a) { return pgm_read_float(&ho
 
 float feedrate_mm_s = MMM_TO_MMS(1500.0);
 static float saved_feedrate_mm_s;
-int16_t feedrate_percentage = 100, saved_feedrate_percentage,
-    flow_percentage[EXTRUDERS] = ARRAY_BY_EXTRUDERS1(100);
+int16_t feedrate_percentage = 100, saved_feedrate_percentage;
 
 // Initialized by settings.load()
-bool axis_relative_modes[] = AXIS_RELATIVE_MODES,
-     volumetric_enabled;
-float filament_size[EXTRUDERS], volumetric_multiplier[EXTRUDERS];
+bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 
 #if HAS_WORKSPACE_OFFSET
   #if HAS_POSITION_SHIFT
@@ -2333,10 +2330,9 @@ static void clean_up_after_endstop_or_probe_move() {
    * @details Used by probe_pt to do a single Z probe.
    *          Leaves current_position[Z_AXIS] at the height where the probe triggered.
    *
-   * @param  short_move Flag for a shorter probe move towards the bed
    * @return The raw Z position where the probe was triggered
    */
-  static float run_z_probe(const bool short_move=true) {
+  static float run_z_probe() {
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
       if (DEBUGGING(LEVELING)) DEBUG_POS(">>> run_z_probe", current_position);
@@ -2374,7 +2370,7 @@ static void clean_up_after_endstop_or_probe_move() {
     #endif
 
     // move down slowly to find bed
-    if (do_probe_move(-10 + (short_move ? 0 : -(Z_MAX_LENGTH)), Z_PROBE_SPEED_SLOW)) return NAN;
+    if (do_probe_move(-10, Z_PROBE_SPEED_SLOW)) return NAN;
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
       if (DEBUGGING(LEVELING)) DEBUG_POS("<<< run_z_probe", current_position);
@@ -2413,44 +2409,23 @@ static void clean_up_after_endstop_or_probe_move() {
 
     const float nx = rx - (X_PROBE_OFFSET_FROM_EXTRUDER), ny = ry - (Y_PROBE_OFFSET_FROM_EXTRUDER);
 
-    if (printable
+    if (!printable
       ? !position_is_reachable(nx, ny)
       : !position_is_reachable_by_probe(rx, ry)
     ) return NAN;
 
-
-    const float old_feedrate_mm_s = feedrate_mm_s;
-
-    #if ENABLED(DELTA)
-      if (current_position[Z_AXIS] > delta_clip_start_height)
-        do_blocking_move_to_z(delta_clip_start_height);
-    #endif
-
-    #if HAS_SOFTWARE_ENDSTOPS
-      // Store the status of the soft endstops and disable if we're probing a non-printable location
-      static bool enable_soft_endstops = soft_endstops_enabled;
-      if (!printable) soft_endstops_enabled = false;
-    #endif
-
-    feedrate_mm_s = XY_PROBE_FEEDRATE_MM_S;
-
     // Move the probe to the given XY
-    do_blocking_move_to_xy(nx, ny);
+    do_blocking_move_to_xy(nx, ny, XY_PROBE_FEEDRATE_MM_S);
 
     float measured_z = NAN;
     if (!DEPLOY_PROBE()) {
-      measured_z = run_z_probe(printable);
+      measured_z = run_z_probe();
 
       if (!stow)
         do_blocking_move_to_z(current_position[Z_AXIS] + Z_CLEARANCE_BETWEEN_PROBES, MMM_TO_MMS(Z_PROBE_SPEED_FAST));
       else
         if (STOW_PROBE()) measured_z = NAN;
     }
-
-    #if HAS_SOFTWARE_ENDSTOPS
-      // Restore the soft endstop status
-      soft_endstops_enabled = enable_soft_endstops;
-    #endif
 
     if (verbose_level > 2) {
       SERIAL_PROTOCOLPGM("Bed X: ");
@@ -2465,8 +2440,6 @@ static void clean_up_after_endstop_or_probe_move() {
     #if ENABLED(DEBUG_LEVELING_FEATURE)
       if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("<<< probe_pt");
     #endif
-
-    feedrate_mm_s = old_feedrate_mm_s;
 
     if (isnan(measured_z)) {
       LCD_MESSAGEPGM(MSG_ERR_PROBING_FAILED);
@@ -3239,7 +3212,7 @@ static void homeaxis(const AxisEnum axis) {
     set_destination_from_current();
     stepper.synchronize();  // Wait for buffered moves to complete
 
-    const float renormalize = 100.0 / flow_percentage[active_extruder] / volumetric_multiplier[active_extruder];
+    const float renormalize = 1.0 / planner.e_factor[active_extruder];
 
     if (retracting) {
       // Retract by moving from a faux E position back to the current E position
@@ -5592,7 +5565,7 @@ void home_all_axes() { gcode_G28(true); }
                       r = delta_calibration_radius * 0.1;
           z_at_pt[CEN] +=
             #if HAS_BED_PROBE
-              probe_pt(cos(a) * r + dx, sin(a) * r + dy, stow_after_each, 1)
+              probe_pt(cos(a) * r + dx, sin(a) * r + dy, stow_after_each, 1, false)
             #else
               lcd_probe_pt(cos(a) * r, sin(a) * r)
             #endif
@@ -5621,7 +5594,7 @@ void home_all_axes() { gcode_G28(true); }
                         interpol = fmod(axis, 1);
             const float z_temp =
               #if HAS_BED_PROBE
-                probe_pt(cos(a) * r + dx, sin(a) * r + dy, stow_after_each, 1)
+                probe_pt(cos(a) * r + dx, sin(a) * r + dy, stow_after_each, 1, false)
               #else
                 lcd_probe_pt(cos(a) * r, sin(a) * r)
               #endif
@@ -5636,7 +5609,6 @@ void home_all_axes() { gcode_G28(true); }
           LOOP_CAL_RAD(axis)
             z_at_pt[axis] /= _7P_STEP  / steps;
       }
-
 
       float S1 = z_at_pt[CEN],
             S2 = sq(z_at_pt[CEN]);
@@ -5675,6 +5647,7 @@ void home_all_axes() { gcode_G28(true); }
 
       LOOP_XYZ(axis) {
         delta_endstop_adj[axis] -= 1.0;
+        recalc_delta_settings();
 
         endstops.enable(true);
         if (!home_delta()) return;
@@ -5688,6 +5661,7 @@ void home_all_axes() { gcode_G28(true); }
         LOOP_CAL_ALL(axis) z_at_pt[axis] -= z_at_pt_base[axis];
         print_G33_results(z_at_pt, true, true);
         delta_endstop_adj[axis] += 1.0;
+        recalc_delta_settings();
         switch (axis) {
           case A_AXIS :
             h_fac += 4.0 / (Z03(CEN) +Z01(__A)                               +Z32(_CA) +Z32(_AB)); // Offset by X-tower end-stop
@@ -5705,7 +5679,7 @@ void home_all_axes() { gcode_G28(true); }
 
       for (int8_t zig_zag = -1; zig_zag < 2; zig_zag += 2) {
         delta_radius += 1.0 * zig_zag;
-        recalc_delta_settings(delta_radius, delta_diagonal_rod, delta_tower_angle_trim);
+        recalc_delta_settings();
 
         endstops.enable(true);
         if (!home_delta()) return;
@@ -5718,7 +5692,7 @@ void home_all_axes() { gcode_G28(true); }
         LOOP_CAL_ALL(axis) z_at_pt[axis] -= z_at_pt_base[axis];
         print_G33_results(z_at_pt, true, true);
         delta_radius -= 1.0 * zig_zag;
-        recalc_delta_settings(delta_radius, delta_diagonal_rod, delta_tower_angle_trim);
+        recalc_delta_settings();
         r_fac -= zig_zag * 6.0 / (Z03(__A) +Z03(__B) +Z03(__C) +Z03(_BC) +Z03(_CA) +Z03(_AB)); // Offset by delta radius
       }
       r_fac /= 2.0;
@@ -5731,7 +5705,7 @@ void home_all_axes() { gcode_G28(true); }
         z_temp = MAX3(delta_endstop_adj[A_AXIS], delta_endstop_adj[B_AXIS], delta_endstop_adj[C_AXIS]);
         delta_height -= z_temp;
         LOOP_XYZ(axis) delta_endstop_adj[axis] -= z_temp;
-        recalc_delta_settings(delta_radius, delta_diagonal_rod, delta_tower_angle_trim);
+        recalc_delta_settings();
 
         endstops.enable(true);
         if (!home_delta()) return;
@@ -5751,7 +5725,7 @@ void home_all_axes() { gcode_G28(true); }
         z_temp = MAX3(delta_endstop_adj[A_AXIS], delta_endstop_adj[B_AXIS], delta_endstop_adj[C_AXIS]);
         delta_height -= z_temp;
         LOOP_XYZ(axis) delta_endstop_adj[axis] -= z_temp;
-        recalc_delta_settings(delta_radius, delta_diagonal_rod, delta_tower_angle_trim);
+        recalc_delta_settings();
         switch (axis) {
           case A_AXIS :
           a_fac += 4.0 / (          Z06(__B) -Z06(__C)           +Z06(_CA) -Z06(_AB)); // Offset by alpha tower angle
@@ -6038,7 +6012,7 @@ void home_all_axes() { gcode_G28(true); }
         delta_height -= z_temp;
         LOOP_XYZ(axis) delta_endstop_adj[axis] -= z_temp;
       }
-      recalc_delta_settings(delta_radius, delta_diagonal_rod, delta_tower_angle_trim);
+      recalc_delta_settings();
       NOMORE(zero_std_dev_min, zero_std_dev);
 
       // print report
@@ -6475,6 +6449,7 @@ inline void gcode_G92() {
         const float spindle_laser_power = parser.floatval('S');
         if (spindle_laser_power == 0) {
           WRITE(SPINDLE_LASER_ENABLE_PIN, !SPINDLE_LASER_ENABLE_INVERT);                                    // turn spindle off (active low)
+          analogWrite(SPINDLE_LASER_PWM_PIN, SPINDLE_LASER_PWM_INVERT ? 255 : 0);                           // only write low byte
           delay_for_power_down();
         }
         else {
@@ -6565,7 +6540,7 @@ inline void gcode_M17() {
   #endif
 
   void do_pause_e_move(const float &length, const float fr) {
-    current_position[E_AXIS] += length;
+    current_position[E_AXIS] += length / planner.e_factor[active_extruder];
     set_destination_from_current();
     RUNPLAN(fr);
     stepper.synchronize();
@@ -8844,15 +8819,14 @@ inline void gcode_M200() {
     // setting any extruder filament size disables volumetric on the assumption that
     // slicers either generate in extruder values as cubic mm or as as filament feeds
     // for all extruders
-    volumetric_enabled = (parser.value_linear_units() != 0.0);
-    if (volumetric_enabled) {
-      filament_size[target_extruder] = parser.value_linear_units();
+    if ( (parser.volumetric_enabled = (parser.value_linear_units() != 0.0)) ) {
+      planner.filament_size[target_extruder] = parser.value_linear_units();
       // make sure all extruders have some sane value for the filament size
-      for (uint8_t i = 0; i < COUNT(filament_size); i++)
-        if (! filament_size[i]) filament_size[i] = DEFAULT_NOMINAL_FILAMENT_DIA;
+      for (uint8_t i = 0; i < COUNT(planner.filament_size); i++)
+        if (!planner.filament_size[i]) planner.filament_size[i] = DEFAULT_NOMINAL_FILAMENT_DIA;
     }
   }
-  calculate_volumetric_multipliers();
+  planner.calculate_volumetric_multipliers();
 }
 
 /**
@@ -8997,7 +8971,7 @@ inline void gcode_M205() {
     if (parser.seen('X')) delta_tower_angle_trim[A_AXIS] = parser.value_float();
     if (parser.seen('Y')) delta_tower_angle_trim[B_AXIS] = parser.value_float();
     if (parser.seen('Z')) delta_tower_angle_trim[C_AXIS] = parser.value_float();
-    recalc_delta_settings(delta_radius, delta_diagonal_rod, delta_tower_angle_trim);
+    recalc_delta_settings();
   }
   /**
    * M666: Set delta endstop adjustment
@@ -9213,8 +9187,10 @@ inline void gcode_M220() {
  */
 inline void gcode_M221() {
   if (get_target_extruder_from_command(221)) return;
-  if (parser.seenval('S'))
-    flow_percentage[target_extruder] = parser.value_int();
+  if (parser.seenval('S')) {
+    planner.flow_percentage[target_extruder] = parser.value_int();
+    planner.refresh_e_factor(target_extruder);
+  }
 }
 
 /**
@@ -9338,8 +9314,7 @@ inline void gcode_M226() {
     #if ENABLED(BABYSTEP_XY)
       for (uint8_t a = X_AXIS; a <= Z_AXIS; a++)
         if (parser.seenval(axis_codes[a]) || (a == Z_AXIS && parser.seenval('S'))) {
-          float offs = parser.value_axis_units(a);
-          constrain(offs, -2, 2);
+          const float offs = constrain(parser.value_axis_units(a), -2, 2);
           #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
             if (a == Z_AXIS) {
               zprobe_zoffset += offs;
@@ -9350,8 +9325,7 @@ inline void gcode_M226() {
         }
     #else
       if (parser.seenval('Z') || parser.seenval('S')) {
-        float offs = parser.value_axis_units(Z_AXIS);
-        constrain(offs, -2, 2);
+        const float offs = constrain(parser.value_axis_units(Z_AXIS), -2, 2);
         #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
           zprobe_zoffset += offs;
           refresh_zprobe_zoffset(); // This will babystep the axis
@@ -9439,8 +9413,6 @@ inline void gcode_M226() {
     if (parser.seen('P')) thermalManager.bedKp = parser.value_float();
     if (parser.seen('I')) thermalManager.bedKi = scalePID_i(parser.value_float());
     if (parser.seen('D')) thermalManager.bedKd = scalePID_d(parser.value_float());
-
-    thermalManager.updatePID();
 
     SERIAL_ECHO_START();
     SERIAL_ECHOPAIR(" p:", thermalManager.bedKp);
@@ -9749,7 +9721,7 @@ inline void gcode_M400() { stepper.synchronize(); }
     //SERIAL_PROTOCOLPGM("Filament dia (measured mm):");
     //SERIAL_PROTOCOL(filament_width_meas);
     //SERIAL_PROTOCOLPGM("Extrusion ratio(%):");
-    //SERIAL_PROTOCOL(flow_percentage[active_extruder]);
+    //SERIAL_PROTOCOL(planner.flow_percentage[active_extruder]);
   }
 
   /**
@@ -9757,7 +9729,7 @@ inline void gcode_M400() { stepper.synchronize(); }
    */
   inline void gcode_M406() {
     filament_sensor = false;
-    calculate_volumetric_multipliers();   // Restore correct 'volumetric_multiplier' value
+    planner.calculate_volumetric_multipliers();   // Restore correct 'volumetric_multiplier' value
   }
 
   /**
@@ -11409,17 +11381,13 @@ void process_parsed_command() {
 
       #endif // HAS_BED_PROBE
 
-      #if PROBE_SELECTED
+      #if ENABLED(DELTA_AUTO_CALIBRATION)
 
-        #if ENABLED(DELTA_AUTO_CALIBRATION)
+        case 33: // G33: Delta Auto-Calibration
+          gcode_G33();
+          break;
 
-          case 33: // G33: Delta Auto-Calibration
-            gcode_G33();
-            break;
-
-        #endif // DELTA_AUTO_CALIBRATION
-
-      #endif // PROBE_SELECTED
+      #endif // DELTA_AUTO_CALIBRATION
 
       #if ENABLED(G38_PROBE_TARGET)
         case 38: // G38.2 & G38.3
@@ -12355,18 +12323,20 @@ void ok_to_send() {
    * Recalculate factors used for delta kinematics whenever
    * settings have been changed (e.g., by M665).
    */
-  void recalc_delta_settings(float radius, float diagonal_rod, float tower_angle_trim[ABC]) {
+  void recalc_delta_settings() {
     const float trt[ABC] = DELTA_RADIUS_TRIM_TOWER,
                 drt[ABC] = DELTA_DIAGONAL_ROD_TRIM_TOWER;
-    delta_tower[A_AXIS][X_AXIS] = cos(RADIANS(210 + tower_angle_trim[A_AXIS])) * (radius + trt[A_AXIS]); // front left tower
-    delta_tower[A_AXIS][Y_AXIS] = sin(RADIANS(210 + tower_angle_trim[A_AXIS])) * (radius + trt[A_AXIS]);
-    delta_tower[B_AXIS][X_AXIS] = cos(RADIANS(330 + tower_angle_trim[B_AXIS])) * (radius + trt[B_AXIS]); // front right tower
-    delta_tower[B_AXIS][Y_AXIS] = sin(RADIANS(330 + tower_angle_trim[B_AXIS])) * (radius + trt[B_AXIS]);
-    delta_tower[C_AXIS][X_AXIS] = cos(RADIANS( 90 + tower_angle_trim[C_AXIS])) * (radius + trt[C_AXIS]); // back middle tower
-    delta_tower[C_AXIS][Y_AXIS] = sin(RADIANS( 90 + tower_angle_trim[C_AXIS])) * (radius + trt[C_AXIS]);
-    delta_diagonal_rod_2_tower[A_AXIS] = sq(diagonal_rod + drt[A_AXIS]);
-    delta_diagonal_rod_2_tower[B_AXIS] = sq(diagonal_rod + drt[B_AXIS]);
-    delta_diagonal_rod_2_tower[C_AXIS] = sq(diagonal_rod + drt[C_AXIS]);
+    delta_tower[A_AXIS][X_AXIS] = cos(RADIANS(210 + delta_tower_angle_trim[A_AXIS])) * (delta_radius + trt[A_AXIS]); // front left tower
+    delta_tower[A_AXIS][Y_AXIS] = sin(RADIANS(210 + delta_tower_angle_trim[A_AXIS])) * (delta_radius + trt[A_AXIS]);
+    delta_tower[B_AXIS][X_AXIS] = cos(RADIANS(330 + delta_tower_angle_trim[B_AXIS])) * (delta_radius + trt[B_AXIS]); // front right tower
+    delta_tower[B_AXIS][Y_AXIS] = sin(RADIANS(330 + delta_tower_angle_trim[B_AXIS])) * (delta_radius + trt[B_AXIS]);
+    delta_tower[C_AXIS][X_AXIS] = cos(RADIANS( 90 + delta_tower_angle_trim[C_AXIS])) * (delta_radius + trt[C_AXIS]); // back middle tower
+    delta_tower[C_AXIS][Y_AXIS] = sin(RADIANS( 90 + delta_tower_angle_trim[C_AXIS])) * (delta_radius + trt[C_AXIS]);
+    delta_diagonal_rod_2_tower[A_AXIS] = sq(delta_diagonal_rod + drt[A_AXIS]);
+    delta_diagonal_rod_2_tower[B_AXIS] = sq(delta_diagonal_rod + drt[B_AXIS]);
+    delta_diagonal_rod_2_tower[C_AXIS] = sq(delta_diagonal_rod + drt[C_AXIS]);
+    update_software_endstops(Z_AXIS);
+    axis_homed[X_AXIS] = axis_homed[Y_AXIS] = axis_homed[Z_AXIS] = false;
   }
 
   #if ENABLED(DELTA_FAST_SQRT)
@@ -12963,27 +12933,32 @@ void set_current_from_steppers_for_axis(const AxisEnum axis) {
  *
  * This may result in several calls to planner.buffer_line to
  * do smaller moves for DELTA, SCARA, mesh moves, etc.
+ *
+ * Make sure current_position[E] and destination[E] are good
+ * before calling or cold/lengthy extrusion may get missed.
  */
 void prepare_move_to_destination() {
   clamp_to_software_endstops(destination);
   refresh_cmd_timeout();
 
-  #if ENABLED(PREVENT_COLD_EXTRUSION)
+  #if ENABLED(PREVENT_COLD_EXTRUSION) || ENABLED(PREVENT_LENGTHY_EXTRUDE)
 
     if (!DEBUGGING(DRYRUN)) {
       if (destination[E_AXIS] != current_position[E_AXIS]) {
-        if (thermalManager.tooColdToExtrude(active_extruder)) {
-          current_position[E_AXIS] = destination[E_AXIS]; // Behave as if the move really took place, but ignore E part
-          SERIAL_ECHO_START();
-          SERIAL_ECHOLNPGM(MSG_ERR_COLD_EXTRUDE_STOP);
-        }
+        #if ENABLED(PREVENT_COLD_EXTRUSION)
+          if (thermalManager.tooColdToExtrude(active_extruder)) {
+            current_position[E_AXIS] = destination[E_AXIS]; // Behave as if the move really took place, but ignore E part
+            SERIAL_ECHO_START();
+            SERIAL_ECHOLNPGM(MSG_ERR_COLD_EXTRUDE_STOP);
+          }
+        #endif // PREVENT_COLD_EXTRUSION
         #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
-          if (destination[E_AXIS] - current_position[E_AXIS] > EXTRUDE_MAXLENGTH) {
+          if (FABS(destination[E_AXIS] - current_position[E_AXIS]) * planner.e_factor[active_extruder] > (EXTRUDE_MAXLENGTH)) {
             current_position[E_AXIS] = destination[E_AXIS]; // Behave as if the move really took place, but ignore E part
             SERIAL_ECHO_START();
             SERIAL_ECHOLNPGM(MSG_ERR_LONG_EXTRUDE_STOP);
           }
-        #endif
+        #endif // PREVENT_LENGTHY_EXTRUDE
       }
     }
 
@@ -13397,16 +13372,6 @@ void prepare_move_to_destination() {
   }
 
 #endif // FAST_PWM_FAN
-
-float calculate_volumetric_multiplier(const float diameter) {
-  if (!volumetric_enabled || diameter == 0) return 1.0;
-  return 1.0 / (M_PI * sq(diameter * 0.5));
-}
-
-void calculate_volumetric_multipliers() {
-  for (uint8_t i = 0; i < COUNT(filament_size); i++)
-    volumetric_multiplier[i] = calculate_volumetric_multiplier(filament_size[i]);
-}
 
 void enable_all_steppers() {
   enable_X();
