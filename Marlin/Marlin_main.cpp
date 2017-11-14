@@ -10035,10 +10035,10 @@ inline void gcode_M502() {
 void refresh_z_offset(const bool no_babystep/*=false*/) {
 	static float last_zoffset = NAN;
 
-	//if (!isnan(last_zoffset)) {
+	if (!isnan(last_zoffset)) {
 //
 		//#if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(BABYSTEP_ZPROBE_OFFSET) || ENABLED(DELTA)
-		//const float diff = zprobe_zoffset - last_zoffset;
+		const float diff = z_offset - last_zoffset;
 		//#endif
 //
 		//#if ENABLED(AUTO_BED_LEVELING_BILINEAR)
@@ -10055,7 +10055,7 @@ void refresh_z_offset(const bool no_babystep/*=false*/) {
 //
 		//#if ENABLED(BABYSTEP_ZPROBE_OFFSET)
 		//if (!no_babystep && planner.leveling_active)
-		//thermalManager.babystep_axis(Z_AXIS, -LROUND(diff * planner.axis_steps_per_mm[Z_AXIS]));
+		thermalManager.babystep_axis(Z_AXIS, -LROUND(diff * planner.axis_steps_per_mm[Z_AXIS]));
 		//#else
 		//UNUSED(no_babystep);
 		//#endif
@@ -10063,7 +10063,7 @@ void refresh_z_offset(const bool no_babystep/*=false*/) {
 		//#if ENABLED(DELTA) // correct the delta_height
 		//delta_height -= diff;
 		//#endif
-	//}
+	}
 
 	last_zoffset = z_offset;
 }
