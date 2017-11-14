@@ -538,9 +538,7 @@ static millis_t stepper_inactive_time = (DEFAULT_STEPPER_DEACTIVE_TIME) * 1000UL
 
 static uint8_t target_extruder;
 
-#if HAS_BED_PROBE
-  float zprobe_zoffset; // Initialized by settings.load()
-#endif
+float zprobe_zoffset; // Initialized by settings.load()
 
 #if HAS_ABL
   float xy_probe_feedrate_mm_s = MMM_TO_MMS(XY_PROBE_SPEED);
@@ -1575,7 +1573,7 @@ static void set_axis_is_at_home(const AxisEnum axis) {
   /**
    * Z Probe Z Homing? Account for the probe's Z offset.
    */
-  #if HAS_BED_PROBE && Z_HOME_DIR < 0
+  #if Z_HOME_DIR < 0
     if (axis == Z_AXIS) {
       #if HOMING_Z_WITH_PROBE
 
@@ -3796,34 +3794,32 @@ inline void gcode_G4() {
       SERIAL_ECHOLNPGM("NONE");
     #endif
 
-    #if HAS_BED_PROBE
-      SERIAL_ECHOPAIR("Probe Offset X:", X_PROBE_OFFSET_FROM_EXTRUDER);
-      SERIAL_ECHOPAIR(" Y:", Y_PROBE_OFFSET_FROM_EXTRUDER);
-      SERIAL_ECHOPAIR(" Z:", zprobe_zoffset);
-      #if X_PROBE_OFFSET_FROM_EXTRUDER > 0
-        SERIAL_ECHOPGM(" (Right");
-      #elif X_PROBE_OFFSET_FROM_EXTRUDER < 0
-        SERIAL_ECHOPGM(" (Left");
-      #elif Y_PROBE_OFFSET_FROM_EXTRUDER != 0
-        SERIAL_ECHOPGM(" (Middle");
-      #else
-        SERIAL_ECHOPGM(" (Aligned With");
-      #endif
-      #if Y_PROBE_OFFSET_FROM_EXTRUDER > 0
-        SERIAL_ECHOPGM("-Back");
-      #elif Y_PROBE_OFFSET_FROM_EXTRUDER < 0
-        SERIAL_ECHOPGM("-Front");
-      #elif X_PROBE_OFFSET_FROM_EXTRUDER != 0
-        SERIAL_ECHOPGM("-Center");
-      #endif
-      if (zprobe_zoffset < 0)
-        SERIAL_ECHOPGM(" & Below");
-      else if (zprobe_zoffset > 0)
-        SERIAL_ECHOPGM(" & Above");
-      else
-        SERIAL_ECHOPGM(" & Same Z as");
-      SERIAL_ECHOLNPGM(" Nozzle)");
+    SERIAL_ECHOPAIR("Probe Offset X:", X_PROBE_OFFSET_FROM_EXTRUDER);
+    SERIAL_ECHOPAIR(" Y:", Y_PROBE_OFFSET_FROM_EXTRUDER);
+    SERIAL_ECHOPAIR(" Z:", zprobe_zoffset);
+    #if X_PROBE_OFFSET_FROM_EXTRUDER > 0
+      SERIAL_ECHOPGM(" (Right");
+    #elif X_PROBE_OFFSET_FROM_EXTRUDER < 0
+      SERIAL_ECHOPGM(" (Left");
+    #elif Y_PROBE_OFFSET_FROM_EXTRUDER != 0
+      SERIAL_ECHOPGM(" (Middle");
+    #else
+      SERIAL_ECHOPGM(" (Aligned With");
     #endif
+    #if Y_PROBE_OFFSET_FROM_EXTRUDER > 0
+      SERIAL_ECHOPGM("-Back");
+    #elif Y_PROBE_OFFSET_FROM_EXTRUDER < 0
+      SERIAL_ECHOPGM("-Front");
+    #elif X_PROBE_OFFSET_FROM_EXTRUDER != 0
+      SERIAL_ECHOPGM("-Center");
+    #endif
+    if (zprobe_zoffset < 0)
+      SERIAL_ECHOPGM(" & Below");
+    else if (zprobe_zoffset > 0)
+      SERIAL_ECHOPGM(" & Above");
+    else
+      SERIAL_ECHOPGM(" & Same Z as");
+    SERIAL_ECHOLNPGM(" Nozzle)");
 
     #if HAS_ABL
       SERIAL_ECHOPGM("Auto Bed Leveling: ");
@@ -8955,10 +8951,7 @@ inline void gcode_M205() {
    *    Z = Rotate A and B by this angle
    */
   inline void gcode_M665() {
-    if (parser.seen('H')) {
-      delta_height = parser.value_linear_units();
-      update_software_endstops(Z_AXIS);
-    }
+    if (parser.seen('H')) delta_height                   = parser.value_linear_units();
     if (parser.seen('L')) delta_diagonal_rod             = parser.value_linear_units();
     if (parser.seen('R')) delta_radius                   = parser.value_linear_units();
     if (parser.seen('S')) delta_segments_per_second      = parser.value_float();
@@ -10027,64 +10020,60 @@ inline void gcode_M502() {
 
 #endif // ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED
 
-#if HAS_BED_PROBE
+void refresh_zprobe_zoffset(const bool no_babystep/*=false*/) {
+  static float last_zoffset = NAN;
 
-  void refresh_zprobe_zoffset(const bool no_babystep/*=false*/) {
-    static float last_zoffset = NAN;
+  if (!isnan(last_zoffset)) {
 
-    if (!isnan(last_zoffset)) {
+    #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(BABYSTEP_ZPROBE_OFFSET) || ENABLED(DELTA)
+      const float diff = zprobe_zoffset - last_zoffset;
+    #endif
 
-      #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(BABYSTEP_ZPROBE_OFFSET) || ENABLED(DELTA)
-        const float diff = zprobe_zoffset - last_zoffset;
+    #if ENABLED(AUTO_BED_LEVELING_BILINEAR) && HAS_BED_PROBE
+      // Correct bilinear grid for new probe offset
+      if (diff) {
+        for (uint8_t x = 0; x < GRID_MAX_POINTS_X; x++)
+          for (uint8_t y = 0; y < GRID_MAX_POINTS_Y; y++)
+            z_values[x][y] -= diff;
+      }
+      #if ENABLED(ABL_BILINEAR_SUBDIVISION)
+        bed_level_virt_interpolate();
       #endif
+    #endif
 
-      #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
-        // Correct bilinear grid for new probe offset
-        if (diff) {
-          for (uint8_t x = 0; x < GRID_MAX_POINTS_X; x++)
-            for (uint8_t y = 0; y < GRID_MAX_POINTS_Y; y++)
-              z_values[x][y] -= diff;
-        }
-        #if ENABLED(ABL_BILINEAR_SUBDIVISION)
-          bed_level_virt_interpolate();
-        #endif
-      #endif
+    #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
+      if (!no_babystep && planner.leveling_active)
+        thermalManager.babystep_axis(Z_AXIS, -LROUND(diff * planner.axis_steps_per_mm[Z_AXIS]));
+    #else
+      UNUSED(no_babystep);
+    #endif
 
-      #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
-        if (!no_babystep && planner.leveling_active)
-          thermalManager.babystep_axis(Z_AXIS, -LROUND(diff * planner.axis_steps_per_mm[Z_AXIS]));
-      #else
-        UNUSED(no_babystep);
-      #endif
-
-      #if ENABLED(DELTA) // correct the delta_height
-        delta_height -= diff;
-      #endif
-    }
-
-    last_zoffset = zprobe_zoffset;
+    #if ENABLED(DELTA) // correct the delta_height
+      delta_height -= diff;
+    #endif
   }
 
-  inline void gcode_M851() {
-    SERIAL_ECHO_START();
-    SERIAL_ECHOPGM(MSG_ZPROBE_ZOFFSET " ");
-    if (parser.seen('Z')) {
-      const float value = parser.value_linear_units();
-      if (WITHIN(value, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX)) {
-        zprobe_zoffset = value;
-        refresh_zprobe_zoffset();
-        SERIAL_ECHO(zprobe_zoffset);
-      }
-      else
-        SERIAL_ECHOPGM(MSG_Z_MIN " " STRINGIFY(Z_PROBE_OFFSET_RANGE_MIN) " " MSG_Z_MAX " " STRINGIFY(Z_PROBE_OFFSET_RANGE_MAX));
+  last_zoffset = zprobe_zoffset;
+}
+
+inline void gcode_M851() {
+  SERIAL_ECHO_START();
+  SERIAL_ECHOPGM(MSG_ZPROBE_ZOFFSET " ");
+  if (parser.seen('Z')) {
+    const float value = parser.value_linear_units();
+    if (WITHIN(value, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX)) {
+      zprobe_zoffset = value;
+      refresh_zprobe_zoffset();
+      SERIAL_ECHO(zprobe_zoffset);
     }
     else
-      SERIAL_ECHOPAIR(": ", zprobe_zoffset);
-
-    SERIAL_EOL();
+      SERIAL_ECHOPGM(MSG_Z_MIN " " STRINGIFY(Z_PROBE_OFFSET_RANGE_MIN) " " MSG_Z_MAX " " STRINGIFY(Z_PROBE_OFFSET_RANGE_MAX));
   }
+  else
+    SERIAL_ECHOPAIR(": ", zprobe_zoffset);
 
-#endif // HAS_BED_PROBE
+  SERIAL_EOL();
+}
 
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
 
@@ -11920,11 +11909,9 @@ void process_parsed_command() {
           break;
       #endif
 
-      #if HAS_BED_PROBE
-        case 851: // M851: Set Z Probe Z Offset
-          gcode_M851();
-          break;
-      #endif // HAS_BED_PROBE
+      case 851: // M851: Set Z Probe Z Offset
+        gcode_M851();
+        break;
 
       #if ENABLED(ADVANCED_PAUSE_FEATURE)
         case 600: // M600: Pause for filament change
