@@ -716,6 +716,16 @@
 #define Z_CLEARANCE_DEPLOY_PROBE   10 // Z Clearance for Deploy/Stow
 #define Z_CLEARANCE_BETWEEN_PROBES  5 // Z Clearance between probe points
 
+// Enable the use of the for adjusting the Z offset with no probe
+// For M851 give a range for adjusting the Z offset with no probe
+#define HAS_NO_BED_PROBE
+#if ENABLED(HAS_NO_BED_PROBE)
+	#define Z_OFFSET_RANGE_MIN -20
+	#define Z_OFFSET_RANGE_MAX 20
+#endif
+
+
+
 // For M851 give a range for adjusting the Z probe offset
 #define Z_PROBE_OFFSET_RANGE_MIN -20
 #define Z_PROBE_OFFSET_RANGE_MAX 20

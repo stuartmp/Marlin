@@ -1680,6 +1680,8 @@ void kill_screen(const char* lcd_msg) {
 
   #if HAS_BED_PROBE && DISABLED(BABYSTEP_ZPROBE_OFFSET)
     static void lcd_refresh_zprobe_zoffset() { refresh_zprobe_zoffset(); }
+  #elif HAS_NO_BED_PROBE
+    static void lcd_refresh_z_offset() {refresh_z_offset(); }
   #endif
 
 
@@ -3660,7 +3662,9 @@ void kill_screen(const char* lcd_msg) {
       MENU_ITEM(submenu, MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);
     #elif HAS_BED_PROBE
       MENU_ITEM_EDIT_CALLBACK(float32, MSG_ZPROBE_ZOFFSET, &zprobe_zoffset, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX, lcd_refresh_zprobe_zoffset);
-    #endif
+    #elif HAS_NO_BED_PROBE
+      MENU_ITEM_EDIT_CALLBACK(float32, MSG_ZPROBE_ZOFFSET, &z_offset, Z_OFFSET_RANGE_MIN, Z_OFFSET_RANGE_MAX, lcd_refresh_z_offset);
+	#endif
 
     // M203 / M205 - Feedrate items
     MENU_ITEM(submenu, MSG_VELOCITY, lcd_control_motion_velocity_menu);

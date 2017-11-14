@@ -348,6 +348,9 @@ void report_current_position();
   void refresh_zprobe_zoffset(const bool no_babystep=false);
   #define DEPLOY_PROBE() set_probe_deployed(true)
   #define STOW_PROBE() set_probe_deployed(false)
+#elif ENABLED(HAS_NO_BED_PROBE)
+  extern float z_offset;
+  void refresh_z_offset(const bool no_babystep=false);
 #else
   #define DEPLOY_PROBE()
   #define STOW_PROBE()

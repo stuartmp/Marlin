@@ -538,6 +538,9 @@ static millis_t stepper_inactive_time = (DEFAULT_STEPPER_DEACTIVE_TIME) * 1000UL
 
 static uint8_t target_extruder;
 
+#if ENABLED(HAS_NO_BED_PROBE)
+float z_offset; // Initialized by settings.load()
+#endif
 #if HAS_BED_PROBE
   float zprobe_zoffset; // Initialized by settings.load()
 #endif
@@ -10026,6 +10029,47 @@ inline void gcode_M502() {
   }
 
 #endif // ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED
+
+#if ENABLED(HAS_NO_BED_PROBE)
+
+void refresh_z_offset(const bool no_babystep/*=false*/) {
+	static float last_zoffset = NAN;
+
+	//if (!isnan(last_zoffset)) {
+//
+		//#if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(BABYSTEP_ZPROBE_OFFSET) || ENABLED(DELTA)
+		//const float diff = zprobe_zoffset - last_zoffset;
+		//#endif
+//
+		//#if ENABLED(AUTO_BED_LEVELING_BILINEAR)
+		//// Correct bilinear grid for new probe offset
+		//if (diff) {
+			//for (uint8_t x = 0; x < GRID_MAX_POINTS_X; x++)
+			//for (uint8_t y = 0; y < GRID_MAX_POINTS_Y; y++)
+			//z_values[x][y] -= diff;
+		//}
+		//#if ENABLED(ABL_BILINEAR_SUBDIVISION)
+		//bed_level_virt_interpolate();
+		//#endif
+		//#endif
+//
+		//#if ENABLED(BABYSTEP_ZPROBE_OFFSET)
+		//if (!no_babystep && planner.leveling_active)
+		//thermalManager.babystep_axis(Z_AXIS, -LROUND(diff * planner.axis_steps_per_mm[Z_AXIS]));
+		//#else
+		//UNUSED(no_babystep);
+		//#endif
+//
+		//#if ENABLED(DELTA) // correct the delta_height
+		//delta_height -= diff;
+		//#endif
+	//}
+
+	last_zoffset = z_offset;
+}
+
+#endif // HAS_NO_BED_PROBE
+
 
 #if HAS_BED_PROBE
 

@@ -811,6 +811,17 @@
     #define PROBE_IS_TRIGGERED_WHEN_STOWED_TEST
   #endif
 
+ /**
+   * No Bed Probe dependencies
+   */
+ #if ENABLED(HAS_NO_BED_PROBE) 
+	#ifndef Z_OFFSET_RANGE_MIN
+		#define Z_OFFSET_RANGE_MIN -20
+	#endif
+	#ifndef Z_OFFSET_RANGE_MAX
+		#define Z_OFFSET_RANGE_MAX 20
+	#endif
+ #endif
   /**
    * Bed Probe dependencies
    */
