@@ -246,9 +246,9 @@ void MarlinSettings::postprocess() {
     set_z_fade_height(new_z_fade_height);
   #endif
 
-  #if HAS_BED_PROBE
+  
     refresh_zprobe_zoffset();
-  #endif
+ 
 
   #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
     refresh_bed_level();
@@ -399,9 +399,6 @@ void MarlinSettings::postprocess() {
       for (uint8_t q = mesh_num_x * mesh_num_y; q--;) EEPROM_WRITE(dummy);
     #endif // MESH_BED_LEVELING
 
-    #if !HAS_BED_PROBE
-      const float zprobe_zoffset = 0;
-    #endif
     EEPROM_WRITE(zprobe_zoffset);
 
     //
@@ -825,10 +822,7 @@ void MarlinSettings::postprocess() {
         for (uint16_t q = mesh_num_x * mesh_num_y; q--;) EEPROM_READ(dummy);
       #endif // MESH_BED_LEVELING
 
-      #if !HAS_BED_PROBE
-        float zprobe_zoffset;
-      #endif
-      EEPROM_READ(zprobe_zoffset);
+        EEPROM_READ(zprobe_zoffset);
 
       //
       // Planar Bed Leveling matrix
@@ -1326,9 +1320,9 @@ void MarlinSettings::reset() {
     reset_bed_level();
   #endif
 
-  #if HAS_BED_PROBE
+  
     zprobe_zoffset = Z_PROBE_OFFSET_FROM_EXTRUDER;
-  #endif
+  
 
   #if ENABLED(DELTA)
     const float adj[ABC] = DELTA_ENDSTOP_ADJ,
@@ -1910,14 +1904,14 @@ void MarlinSettings::reset() {
     /**
      * Probe Offset
      */
-    #if HAS_BED_PROBE
+    
       if (!forReplay) {
         CONFIG_ECHO_START;
         SERIAL_ECHOLNPGM("Z-Probe Offset (mm):");
       }
       CONFIG_ECHO_START;
       SERIAL_ECHOLNPAIR("  M851 Z", LINEAR_UNIT(zprobe_zoffset));
-    #endif
+   
 
     /**
      * TMC2130 stepper driver current
