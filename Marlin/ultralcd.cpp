@@ -3913,7 +3913,8 @@ void lcd_preheat_m3_menu() { //PETG
     void lcd_sdcard_menu() {
       ENCODER_DIRECTION_MENUS();
 
-      const uint16_t fileCnt = card.getnrfilenames();
+      const uint16_t fileCnt = card.get_num_Files();
+
       START_MENU();
       MENU_BACK(MSG_MAIN);
       card.getWorkDirName();
