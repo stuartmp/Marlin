@@ -93,8 +93,20 @@
 #ifndef MSG_Z_FADE_HEIGHT
   #define MSG_Z_FADE_HEIGHT                   _UxGT("Fade Height")
 #endif
+#ifndef MSG_HOME_OFFSETS
+  #define MSG_HOME_OFFSETS                    _UxGT("Home Offsets")
+#endif
 #ifndef MSG_SET_HOME_OFFSETS
   #define MSG_SET_HOME_OFFSETS                _UxGT("Set home offsets")
+#endif
+#ifndef MSG_ADJ_HOME_OFFSETS
+	#define MSG_ADJ_HOME_OFFSETS                _UxGT("Adjust home offsets")
+#endif
+#ifndef MSG_SET_HOME_Y_OFFSETS
+	#define MSG_SET_HOME_Y_OFFSETS                _UxGT("Set home Y offset")
+#endif
+#ifndef MSG_SET_HOME_Z_OFFSETS
+	#define MSG_SET_HOME_Z_OFFSETS                _UxGT("Set home Z offset")
 #endif
 #ifndef MSG_HOME_OFFSETS_APPLIED
   #define MSG_HOME_OFFSETS_APPLIED            _UxGT("Offsets applied")

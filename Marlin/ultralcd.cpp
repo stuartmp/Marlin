@@ -165,6 +165,7 @@ uint16_t max_display_update_time = 0;
   void lcd_main_menu();
   void lcd_tune_menu();
   void lcd_prepare_menu();
+  void lcd_prepare_home_offsets_menu();
   void lcd_move_menu();
   void lcd_control_menu();
   void lcd_control_temperature_menu();
@@ -1022,13 +1023,151 @@ void kill_screen(const char* lcd_msg) {
   #if HAS_M206_COMMAND
     /**
      * Set the home offset based on the current_position
-     */
+     */		
     void lcd_set_home_offsets() {
       // M428 Command
       enqueue_and_echo_commands_P(PSTR("M428"));
       lcd_return_to_status();
     }
+	
+	float xmove_menu_scale;
+	
+	void _xlcd_move_xyz(const char* name, AxisEnum axis) {
+		if (lcd_clicked) { return lcd_goto_previous_menu(); }
+		ENCODER_DIRECTION_NORMAL();
+		if (encoderPosition && !processing_manual_move) {
+			refresh_cmd_timeout();
+
+			// Start with no limits to movement
+			float min = current_position[axis] - 1000,
+			max = current_position[axis] + 1000;
+
+			// Limit to software endstops, if enabled
+			#if ENABLED(MIN_SOFTWARE_ENDSTOPS) || ENABLED(MAX_SOFTWARE_ENDSTOPS)
+			if (soft_endstops_enabled) switch (axis) {
+				case X_AXIS:
+				#if ENABLED(MIN_SOFTWARE_ENDSTOP_X)
+				min = soft_endstop_min[X_AXIS];
+				#endif
+				#if ENABLED(MAX_SOFTWARE_ENDSTOP_X)
+				max = soft_endstop_max[X_AXIS];
+				#endif
+				break;
+				case Y_AXIS:
+				#if ENABLED(MIN_SOFTWARE_ENDSTOP_Y)
+				min = soft_endstop_min[Y_AXIS];
+				#endif
+				#if ENABLED(MAX_SOFTWARE_ENDSTOP_Y)
+				max = soft_endstop_max[Y_AXIS];
+				#endif
+				break;
+				case Z_AXIS:
+				#if ENABLED(MIN_SOFTWARE_ENDSTOP_Z)
+				min = soft_endstop_min[Z_AXIS];
+				#endif
+				#if ENABLED(MAX_SOFTWARE_ENDSTOP_Z)
+				max = soft_endstop_max[Z_AXIS];
+				#endif
+				break;
+				default: break;
+			}
+			#endif // MIN_SOFTWARE_ENDSTOPS || MAX_SOFTWARE_ENDSTOPS
+
+			// Delta limits XY based on the current offset from center
+			// This assumes the center is 0,0
+			#if ENABLED(DELTA)
+			if (axis != Z_AXIS) {
+				max = SQRT(sq((float)(DELTA_PRINTABLE_RADIUS)) - sq(current_position[Y_AXIS - axis])); // (Y_AXIS - axis) == the other axis
+				min = -max;
+			}
+			#endif
+
+			// Get the new position
+			const float diff = float((int32_t)encoderPosition) * xmove_menu_scale;
+			#if IS_KINEMATIC
+			manual_move_offset += diff;
+			// Limit only when trying to move towards the limit
+			if ((int32_t)encoderPosition < 0) NOLESS(manual_move_offset, min - current_position[axis]);
+			if ((int32_t)encoderPosition > 0) NOMORE(manual_move_offset, max - current_position[axis]);
+			#else
+			current_position[axis] += diff;
+			// Limit only when trying to move towards the limit
+			if ((int32_t)encoderPosition < 0) NOLESS(current_position[axis], min);
+			if ((int32_t)encoderPosition > 0) NOMORE(current_position[axis], max);
+			#endif
+
+			encoderPosition = 0;
+
+			//manual_move_to_current(axis);
+
+			lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
+		}
+		if (lcdDrawUpdate) {
+			const float pos = current_position[axis]
+			#if IS_KINEMATIC
+			+ manual_move_offset
+			#endif
+			;
+			lcd_implementation_drawedit(name, xmove_menu_scale >= 0.1 ? ftostr41sign(pos) : ftostr43sign(pos));
+		}
+	}
+	void xlcd_move_x() { _xlcd_move_xyz(PSTR(MSG_MOVE_X), X_AXIS); }
+	void xlcd_move_y() { _xlcd_move_xyz(PSTR(MSG_MOVE_Y), Y_AXIS); }
+	void xlcd_move_z() { _xlcd_move_xyz(PSTR(MSG_MOVE_Z), Z_AXIS); }
+		
+	 
+	 screenFunc_t _xmanual_move_func_ptr;
+
+	 void _xgoto_manual_move(const float scale) {
+		 defer_return_to_status = true;
+		 xmove_menu_scale = scale;
+		 lcd_goto_screen(_xmanual_move_func_ptr);
+	 }
+	 void xlcd_move_menu_10mm() { _xgoto_manual_move(10.0); }
+	 void xlcd_move_menu_1mm()  { _xgoto_manual_move( 1.0); }
+	 void xlcd_move_menu_01mm() { _xgoto_manual_move( 0.1); }
+
+	 void _lcd_prepare_home_offset_menu(const AxisEnum axis, const screenFunc_t func) {
+		 _xmanual_move_func_ptr = func;
+		 START_MENU();
+		 if (LCD_HEIGHT >= 4) {
+			 switch(axis) {
+				 case X_AXIS:
+				 STATIC_ITEM(MSG_MOVE_X, true, true); break;
+				 case Y_AXIS:
+				 STATIC_ITEM(MSG_MOVE_Y, true, true); break;
+				 case Z_AXIS:
+				 STATIC_ITEM(MSG_MOVE_Z, true, true); break;
+				 default:
+				 STATIC_ITEM(MSG_MOVE_E, true, true); break;
+			 }
+		 }
+		 MENU_BACK(MSG_MOVE_AXIS);
+		 MENU_ITEM(submenu, MSG_MOVE_10MM, xlcd_move_menu_10mm);
+		 MENU_ITEM(submenu, MSG_MOVE_1MM, xlcd_move_menu_1mm);
+		 MENU_ITEM(submenu, MSG_MOVE_01MM, xlcd_move_menu_01mm);
+		 END_MENU();
+	 }
+	
+	void lcd_prepare_adj_home_x_offset_amount()	{ _lcd_prepare_home_offset_menu(X_AXIS, xlcd_move_x); }
+	void lcd_prepare_adj_home_y_offset_amount()	{ _lcd_prepare_home_offset_menu(Y_AXIS, xlcd_move_y); }
+	void lcd_prepare_adj_home_z_offset_amount()	{ _lcd_prepare_home_offset_menu(Z_AXIS, xlcd_move_z); }
+			
+	
+	void lcd_prepare_adj_home_offset_menu() {
+		START_MENU();
+		MENU_BACK(MSG_PREPARE);		  
+		MENU_ITEM(submenu, MSG_MOVE_X, lcd_prepare_adj_home_x_offset_amount);
+		MENU_ITEM(submenu, MSG_MOVE_Y, lcd_prepare_adj_home_y_offset_amount);			 
+		MENU_ITEM(submenu, MSG_MOVE_Z, lcd_prepare_adj_home_z_offset_amount);
+		END_MENU();
+	  }	
+	
+	
   #endif
+  
+  
+  
 
   #if ENABLED(BABYSTEPPING)
 
@@ -2557,6 +2696,22 @@ void kill_screen(const char* lcd_msg) {
 
   #endif // AUTO_BED_LEVELING_UBL
 
+ /**
+   *
+   * "Prepare" > "Home Offsets" submenu
+   *
+   */
+    
+  void lcd_prepare_home_offsets_menu() {
+    START_MENU();
+    MENU_BACK(MSG_PREPARE);
+    MENU_ITEM(function, MSG_SET_HOME_OFFSETS, lcd_set_home_offsets);
+    MENU_ITEM(submenu, MSG_ADJ_HOME_OFFSETS, lcd_prepare_adj_home_offset_menu);	    
+    MENU_ITEM(gcode, MSG_SET_ORIGIN, PSTR("G92 X0 Y0 Z0"));
+	MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));
+    END_MENU();
+  }
+  
   /**
    *
    * "Prepare" submenu
@@ -2572,7 +2727,7 @@ void kill_screen(const char* lcd_msg) {
     MENU_BACK(MSG_MAIN);
 
     //
-    // Move Axis
+    // prepare
     //
     #if ENABLED(DELTA)
       if (axis_homed[X_AXIS] && axis_homed[Y_AXIS] && axis_homed[Z_AXIS])
@@ -2619,10 +2774,8 @@ void kill_screen(const char* lcd_msg) {
       //
       // Set Home Offsets
       //
-      MENU_ITEM(function, MSG_SET_HOME_OFFSETS, lcd_set_home_offsets);
-      //MENU_ITEM(gcode, MSG_SET_ORIGIN, PSTR("G92 X0 Y0 Z0"));
+	  MENU_ITEM(submenu, MSG_HOME_OFFSETS, lcd_prepare_home_offsets_menu);
     #endif
-
     //
     // Disable Steppers
     //
@@ -3155,7 +3308,7 @@ void kill_screen(const char* lcd_msg) {
 
     END_MENU();
   }
-
+  
   /**
    *
    * "Control" submenu
