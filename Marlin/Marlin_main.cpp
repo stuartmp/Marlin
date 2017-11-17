@@ -10325,25 +10325,30 @@ inline void gcode_M502() {
     SERIAL_ECHOLNPGM(" prewarn flag cleared");
   }
 
-  static void tmc2130_get_pwmthrs(TMC2130Stepper &st, const char name, const uint16_t spmm) {
-    SERIAL_CHAR(name);
-    SERIAL_ECHOPGM(" stealthChop max speed set to ");
-    SERIAL_ECHOLN(12650000UL * st.microsteps() / (256 * st.stealth_max_speed() * spmm));
-  }
-  static void tmc2130_set_pwmthrs(TMC2130Stepper &st, const char name, const int32_t thrs, const uint32_t spmm) {
-    st.stealth_max_speed(12650000UL * st.microsteps() / (256 * thrs * spmm));
-    tmc2130_get_pwmthrs(st, name, spmm);
-  }
+  #if ENABLED(HYBRID_THRESHOLD)
+    static void tmc2130_get_pwmthrs(TMC2130Stepper &st, const char name, const uint16_t spmm) {
+      SERIAL_CHAR(name);
+      SERIAL_ECHOPGM(" stealthChop max speed set to ");
+      SERIAL_ECHOLN(12650000UL * st.microsteps() / (256 * st.stealth_max_speed() * spmm));
+    }
 
-  static void tmc2130_get_sgt(TMC2130Stepper &st, const char name) {
-    SERIAL_CHAR(name);
-    SERIAL_ECHOPGM(" driver homing sensitivity set to ");
-    SERIAL_ECHOLN(st.sgt());
-  }
-  static void tmc2130_set_sgt(TMC2130Stepper &st, const char name, const int8_t sgt_val) {
-    st.sgt(sgt_val);
-    tmc2130_get_sgt(st, name);
-  }
+    static void tmc2130_set_pwmthrs(TMC2130Stepper &st, const char name, const int32_t thrs, const uint32_t spmm) {
+      st.stealth_max_speed(12650000UL * st.microsteps() / (256 * thrs * spmm));
+      tmc2130_get_pwmthrs(st, name, spmm);
+    }
+  #endif
+
+  #if ENABLED(SENSORLESS_HOMING)
+    static void tmc2130_get_sgt(TMC2130Stepper &st, const char name) {
+      SERIAL_CHAR(name);
+      SERIAL_ECHOPGM(" driver homing sensitivity set to ");
+      SERIAL_ECHOLN(st.sgt());
+    }
+    static void tmc2130_set_sgt(TMC2130Stepper &st, const char name, const int8_t sgt_val) {
+      st.sgt(sgt_val);
+      tmc2130_get_sgt(st, name);
+    }
+  #endif
 
   /**
    * M906: Set motor current in milliamps using axis codes X, Y, Z, E
@@ -13318,48 +13323,27 @@ void prepare_move_to_destination() {
         #if !AVR_AT90USB1286_FAMILY
           case TIMER0A:
         #endif
-        case TIMER0B:
-          //_SET_CS(0, val);
-          break;
+        case TIMER0B:                           //_SET_CS(0, val);
+                                                  break;
       #endif
-      #ifdef TCCR1A
-        case TIMER1A:
-        case TIMER1B:
-          //_SET_CS(1, val);
-          break;
+      #ifdef TCCR1A 
+        case TIMER1A: case TIMER1B:             //_SET_CS(1, val);
+                                                  break;
       #endif
-      #ifdef TCCR2
-        case TIMER2:
-        case TIMER2:
-          _SET_CS(2, val);
-          break;
+      #ifdef TCCR2 
+        case TIMER2: case TIMER2:                 _SET_CS(2, val); break;
       #endif
-      #ifdef TCCR2A
-        case TIMER2A:
-        case TIMER2B:
-          _SET_CS(2, val);
-          break;
+      #ifdef TCCR2A 
+        case TIMER2A: case TIMER2B:               _SET_CS(2, val); break;
       #endif
-      #ifdef TCCR3A
-        case TIMER3A:
-        case TIMER3B:
-        case TIMER3C:
-          _SET_CS(3, val);
-          break;
+      #ifdef TCCR3A 
+        case TIMER3A: case TIMER3B: case TIMER3C: _SET_CS(3, val); break;
       #endif
-      #ifdef TCCR4A
-        case TIMER4A:
-        case TIMER4B:
-        case TIMER4C:
-          _SET_CS(4, val);
-          break;
+      #ifdef TCCR4A 
+        case TIMER4A: case TIMER4B: case TIMER4C: _SET_CS(4, val); break;
       #endif
-      #ifdef TCCR5A
-        case TIMER5A:
-        case TIMER5B:
-        case TIMER5C:
-          _SET_CS(5, val);
-          break;
+      #ifdef TCCR5A 
+        case TIMER5A: case TIMER5B: case TIMER5C: _SET_CS(5, val); break;
       #endif
     }
   }
