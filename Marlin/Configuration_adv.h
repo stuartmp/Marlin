@@ -1344,6 +1344,13 @@
 //#define NO_WORKSPACE_OFFSETS
 
 /**
+ * Enable this option to allow the home z offsets to be set in real time
+ * needs NO_WORKSPACE_OFFSETS to be disabled
+ * 
+ */
+#define ADJUST_HOME_Z_OFFSET
+
+/**
  * Set the number of proportional font spaces required to fill up a typical character space.
  * This can help to better align the output of commands like `G29 O` Mesh Output.
  *
