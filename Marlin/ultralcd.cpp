@@ -2591,7 +2591,7 @@ void kill_screen(const char* lcd_msg) {
 		#if ENABLED(MIN_SOFTWARE_ENDSTOPS) || ENABLED(MAX_SOFTWARE_ENDSTOPS)	
 			MENU_ITEM(gcode, MSG_DISABLE_SOFTWARE_ENDSTOPS, PSTR("M211 S0"));			
 		#endif
-		MENU_ITEM(submenu, MSG_SET_HOME_Z_OFFSETS, lcd_prepare_set_home_z_offset_amount);
+		MENU_ITEM(submenu, MSG_ADJ_HOME_Z_OFFSETS, lcd_prepare_set_home_z_offset_amount);
 		#if ENABLED(MIN_SOFTWARE_ENDSTOPS) || ENABLED(MAX_SOFTWARE_ENDSTOPS)			
 			MENU_ITEM(gcode, MSG_ENABLE_SOFTWARE_ENDSTOPS, PSTR("M211 S1"));
 		#endif

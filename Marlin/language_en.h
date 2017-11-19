@@ -111,8 +111,8 @@
 #ifndef MSG_DISPLAY_HOME_OFFSETS
 	#define MSG_DISPLAY_HOME_OFFSETS          _UxGT("Display home offsets")
 #endif
-#ifndef MSG_SET_HOME_Z_OFFSETS
-	#define MSG_SET_HOME_Z_OFFSETS            _UxGT("Set home Z offset")
+#ifndef MSG_ADJ_HOME_Z_OFFSETS
+	#define MSG_ADJ_HOME_Z_OFFSETS            _UxGT("Adj. home Z offset")
 #endif
 #ifndef MSG_HOME_OFFSETS_APPLIED
   #define MSG_HOME_OFFSETS_APPLIED            _UxGT("Offsets applied")
