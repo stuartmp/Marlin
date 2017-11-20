@@ -165,7 +165,7 @@ uint16_t max_display_update_time = 0;
   void lcd_main_menu();
   void lcd_tune_menu();
   void lcd_prepare_menu();
-  void lcd_prepare_adj_home_z_offsets_menu();
+  void lcd_prepare_set_z_offset_menu();
   void lcd_move_menu();
   void lcd_control_menu();
   void lcd_control_temperature_menu();
@@ -1679,6 +1679,7 @@ void kill_screen(const char* lcd_msg) {
     static void lcd_store_settings()   { lcd_completion_feedback(settings.save()); }
     static void lcd_load_settings()    { lcd_completion_feedback(settings.load()); }
   #endif
+    
 
   #if ENABLED(LEVEL_BED_CORNERS)
 
@@ -2558,45 +2559,30 @@ void kill_screen(const char* lcd_msg) {
    *
    * "Prepare" > "Home Offsets" submenu
    *
-   */
-	void lcd_move_x();
-	void lcd_move_y();
-	void lcd_move_z();
-	void _lcd_move_distance_menu(const AxisEnum axis, const screenFunc_t func);  
- 	
-	void lcd_prepare_display_home_offsets(){ 
-		#define LINEAR_UNIT(N) ((N) / parser.linear_unit_factor)
-		#define CURRENT_HOME_X_OFFSET 0.0 //LINEAR_UNIT(home_offset[X_AXIS])  //	<-- Don't know how to get current home offset
-		#define CURRENT_HOME_Y_OFFSET 0.0 //LINEAR_UNIT(home_offset[Y_AXIS]) //	<-- Don't know how to get current home offset
-		#define CURRENT_HOME_Z_OFFSET 0.2 //LINEAR_UNIT(home_offset[Z_AXIS]) //	<-- Don't know how to get current home offset		
-		#define CURRENT_HOME_OFFSETS "M117" " X:" STRINGIFY(CURRENT_HOME_X_OFFSET) " Y:" STRINGIFY(CURRENT_HOME_Y_OFFSET) " Z:" STRINGIFY(CURRENT_HOME_Z_OFFSET)
-				
-		_lcd_user_gcode(PSTR(CURRENT_HOME_OFFSETS));
-		lcd_return_to_status();		
-	}	
+   */ 
 	
-	void lcd_prepare_set_home_z_offset_amount()	{
-		 _lcd_move_distance_menu(Z_AXIS, lcd_move_z); // <-- Once this completes then issue the set home offset cmd
-		 //enqueue_and_echo_commands_P(PSTR("M428"));
-		 //lcd_return_to_status();
-	}
-	
+  void lcd_prepare_save_and_G1Z0() {	  
+	  _lcd_user_gcode(PSTR("M500"));  
+	  _lcd_user_gcode(PSTR("M501"));
+	  _lcd_user_gcode(PSTR("G1 Z0"));
+	  lcd_return_to_status(); 
+	  _lcd_user_gcode(PSTR("M117 Z Offset set..."));
+	      
+  }
     
-  void lcd_prepare_adj_home_z_offsets_menu() {
-    START_MENU();
-    MENU_BACK(MSG_PREPARE);
-	MENU_ITEM(function, MSG_DISPLAY_HOME_OFFSETS, lcd_prepare_display_home_offsets);    
-	MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));	
-	#if ENABLED(ADJUST_HOME_Z_OFFSET) && DISABLED(NO_WORKSPACE_OFFSETS)
-		#if ENABLED(MIN_SOFTWARE_ENDSTOPS) || ENABLED(MAX_SOFTWARE_ENDSTOPS)	
-			MENU_ITEM(gcode, MSG_DISABLE_SOFTWARE_ENDSTOPS, PSTR("M211 S0"));			
-		#endif
-		MENU_ITEM(submenu, MSG_ADJ_HOME_Z_OFFSETS, lcd_prepare_set_home_z_offset_amount);
-		#if ENABLED(MIN_SOFTWARE_ENDSTOPS) || ENABLED(MAX_SOFTWARE_ENDSTOPS)			
-			MENU_ITEM(gcode, MSG_ENABLE_SOFTWARE_ENDSTOPS, PSTR("M211 S1"));
-		#endif
-	#endif
-	MENU_ITEM(function, MSG_STORE_HOME_OFFSETS, lcd_set_home_offsets);
+  void lcd_prepare_set_z_offset_menu() {    
+	START_MENU();
+    MENU_BACK(MSG_PREPARE);		
+	#if ENABLED(BABYSTEP_ZPROBE_OFFSET)
+	  MENU_ITEM(submenu, MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);
+	#elif HAS_BED_PROBE
+	  MENU_ITEM_EDIT_CALLBACK(float32, MSG_ZPROBE_ZOFFSET, &zprobe_zoffset, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX, lcd_refresh_zprobe_zoffset);
+	#elif DISABLED(DELTA)
+	  MENU_MULTIPLIER_ITEM_EDIT(float32, MSG_ZPROBE_ZOFFSET, &home_offset[Z_AXIS], -20, 20);	
+	#endif	  
+	#if ENABLED(EEPROM_SETTINGS)
+	  MENU_ITEM(function, MSG_SAVE_AND_G1Z0, lcd_prepare_save_and_G1Z0);	  
+	#endif	  			
     END_MENU();
   }
   
@@ -2605,7 +2591,7 @@ void kill_screen(const char* lcd_msg) {
    * "Prepare" submenu
    *
    */
-
+  
   void lcd_prepare_menu() {
     START_MENU();
 
@@ -2657,12 +2643,13 @@ void kill_screen(const char* lcd_msg) {
           MENU_ITEM(function, MSG_LEVEL_CORNERS, _lcd_level_bed_corners);
       #endif
     #endif
-
+	
     #if HAS_M206_COMMAND
       //
       // Set Home Offsets
-      //	  
-	  MENU_ITEM(submenu, MSG_SET_HOME_OFFSETS, lcd_prepare_adj_home_z_offsets_menu);
+      //  
+	  MENU_ITEM(submenu, MSG_SET_Z_OFFSET, lcd_prepare_set_z_offset_menu);
+	  MENU_ITEM(function, MSG_SET_HOME_OFFSETS, lcd_set_home_offsets);
 	  //MENU_ITEM(gcode, MSG_SET_ORIGIN, PSTR("G92 X0 Y0 Z0"));	  
     #endif
     //
@@ -3699,10 +3686,14 @@ void kill_screen(const char* lcd_msg) {
     MENU_BACK(MSG_CONTROL);
 
     #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
-      MENU_ITEM(submenu, MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);
-    #elif HAS_BED_PROBE
-      MENU_ITEM_EDIT(float32, MSG_ZPROBE_ZOFFSET, &zprobe_zoffset, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX);
+      MENU_ITEM(submenu, MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);    
+	 #elif HAS_BED_PROBE	 
+      MENU_ITEM_EDIT_CALLBACK(float32, MSG_ZPROBE_ZOFFSET, &zprobe_zoffset, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX, lcd_refresh_zprobe_zoffset);
+	 #elif DISABLED(DELTA)
+      MENU_MULTIPLIER_ITEM_EDIT(float32, MSG_ZPROBE_ZOFFSET, &home_offset[Z_AXIS], -20, 20);
     #endif
+	
+	
 
     // M203 / M205 - Feedrate items
     MENU_ITEM(submenu, MSG_VELOCITY, lcd_control_motion_velocity_menu);

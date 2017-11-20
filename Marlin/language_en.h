@@ -96,23 +96,14 @@
 #ifndef MSG_HOME_OFFSETS
   #define MSG_HOME_OFFSETS                    _UxGT("Home Offsets")
 #endif
+#ifndef MSG_SET_Z_OFFSET
+  #define MSG_SET_Z_OFFSET                _UxGT("Set Z offset")
+#endif
 #ifndef MSG_SET_HOME_OFFSETS
-  #define MSG_SET_HOME_OFFSETS                _UxGT("Set home offsets")
+  #define MSG_SET_HOME_OFFSETS              _UxGT("Set home offsets")
 #endif
-#ifndef MSG_STORE_HOME_OFFSETS
-	#define MSG_STORE_HOME_OFFSETS                _UxGT("Store home offsets")
-#endif
-#ifndef MSG_DISABLE_SOFTWARE_ENDSTOPS
-	#define MSG_DISABLE_SOFTWARE_ENDSTOPS     _UxGT("Disable soft endstops")
-#endif
-#ifndef MSG_ENABLE_SOFTWARE_ENDSTOPS
-	#define MSG_ENABLE_SOFTWARE_ENDSTOPS      _UxGT("Enable soft endstops")
-#endif
-#ifndef MSG_DISPLAY_HOME_OFFSETS
-	#define MSG_DISPLAY_HOME_OFFSETS          _UxGT("Display home offsets")
-#endif
-#ifndef MSG_ADJ_HOME_Z_OFFSETS
-	#define MSG_ADJ_HOME_Z_OFFSETS            _UxGT("Adj. home Z offset")
+#ifndef MSG_SAVE_AND_G1Z0
+	#define MSG_SAVE_AND_G1Z0				  _UxGT("Save Z offset & G1Z0")
 #endif
 #ifndef MSG_HOME_OFFSETS_APPLIED
   #define MSG_HOME_OFFSETS_APPLIED            _UxGT("Offsets applied")
