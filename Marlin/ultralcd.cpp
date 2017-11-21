@@ -2560,6 +2560,16 @@ void kill_screen(const char* lcd_msg) {
    * "Prepare" > "Home Offsets" submenu
    *
    */ 
+ 
+ void _lcd_user_gcode(const char * const cmd) {
+	 enqueue_and_echo_commands_P(cmd);
+	 //#if ENABLED(USER_SCRIPT_AUDIBLE_FEEDBACK)
+	 //lcd_completion_feedback();
+	 //#endif
+	 //#if ENABLED(USER_SCRIPT_RETURN)
+	//lcd_return_to_status();
+	// #endif
+ }
 	
   void lcd_prepare_save_and_G1Z0() {	  
 	  _lcd_user_gcode(PSTR("M500"));  
