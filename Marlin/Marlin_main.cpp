@@ -13306,7 +13306,7 @@ void prepare_move_to_destination() {
                                                   break;
       #endif
       #ifdef TCCR2
-        case TIMER2: case TIMER2:                 _SET_CS(2, val); break;
+        case TIMER2:                              _SET_CS(2, val); break;
       #endif
       #ifdef TCCR2A
         case TIMER2A: case TIMER2B:               _SET_CS(2, val); break;
