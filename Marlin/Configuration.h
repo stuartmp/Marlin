@@ -370,12 +370,10 @@
   // Stock CR-10 tuned for 200C
 
 
+  #define  DEFAULT_Kp 29.12
+  #define  DEFAULT_Ki 2.59
+  #define  DEFAULT_Kd 81.72
 
-
-
-  #define  DEFAULT_Kp 31.49
-  #define  DEFAULT_Ki 3.00
-  #define  DEFAULT_Kd 82.54
 
   // Ultimaker
   //#define  DEFAULT_Kp 22.2
